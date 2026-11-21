@@ -42,6 +42,20 @@ Then create a **separate folder for your home** (never inside the plugin), open 
 /homemaster:new-project
 ```
 
+## Where you can use it
+
+HomeMaster is a Claude Code plugin, so it runs wherever Claude Code runs, not only in a terminal:
+
+| Where | How |
+|---|---|
+| **Claude desktop app, Code tab** (a normal chat window) | Start a session in **your home folder**, then type `/homemaster:new-project`. |
+| **VS Code / JetBrains extension** | Open your home folder, open the Claude panel, type `/homemaster:new-project`. |
+| **Terminal** | `cd` into your home folder, run `claude`, type `/homemaster:new-project`. |
+
+You install the plugin once (see above). After that you can just talk to it in plain language ("I want to renovate my bathroom", "what is the next step?"). The slash commands are only shortcuts.
+
+> **claude.ai in the web browser** does not load Claude Code plugins. A version for the web chat (skills or a Project) is on the [roadmap](ROADMAP.md).
+
 ## Language
 
 The plugin's structure and knowledge base are in English so anyone can contribute. **Agents answer in the language set in your project profile.** Slovenian ships with a glossary and regional notes (`skills/knowledge/references/regions/`). Adding a language means adding a glossary and a region file. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).

@@ -50,5 +50,8 @@ One reference file per trade in `skills/knowledge/references/trades/`, each with
 ## ⬜ Step 6 — More rooms & trades
 - Kitchen · floors (laminate, parquet, vinyl) · walls & painting · ceilings · windows & doors · heating · insulation · exterior
 
+## ⬜ Step 6b — Web chat version (claude.ai)
+- Plugins don't load in the claude.ai web chat. Options: (a) the knowledge and the `plan-room` / `next-step` skills packaged as uploadable **skills**, (b) a **Project** with the knowledge files and instructions. Both need the project data (`my-home/`) to live in the chat or in a file the user uploads.
+
 ## ⬜ Step 7 — Publish
 - Public GitHub repo, contribution guide, example project, more languages

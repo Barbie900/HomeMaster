@@ -42,6 +42,20 @@ Nato ustvari **ločeno mapo za svoj dom** (nikoli znotraj plugina), v njej odpri
 /homemaster:new-project
 ```
 
+## Kje ga lahko uporabljaš
+
+HomeMaster je plugin za Claude Code, zato deluje povsod, kjer deluje Claude Code, ne samo v terminalu:
+
+| Kje | Kako |
+|---|---|
+| **Claude namizna aplikacija, zavihek Code** (navaden klepet) | Začni sejo v **mapi svojega doma** in vpiši `/homemaster:new-project`. |
+| **Razširitev za VS Code / JetBrains** | Odpri mapo svojega doma, odpri Claude in vpiši `/homemaster:new-project`. |
+| **Terminal** | `cd` v mapo svojega doma, zaženi `claude` in vpiši `/homemaster:new-project`. |
+
+Plugin namestiš enkrat (glej zgoraj). Potem se lahko z njim pogovarjaš kar v navadnem jeziku (»želim prenoviti kopalnico«, »kaj je naslednji korak?«). Poševni ukazi so samo bližnjice.
+
+> **claude.ai v spletnem brskalniku** plugine za Claude Code ne nalaga. Različica za spletni klepet (skilli ali Project) je v [ROADMAP.md](ROADMAP.md).
+
 ## Jezik
 
 Struktura in baza znanja sta v angleščini, da lahko prispeva kdorkoli. **Agenti odgovarjajo v jeziku, nastavljenem v profilu projekta.** Slovenščina ima vgrajen slovar strokovnih izrazov in regionalne opombe.
