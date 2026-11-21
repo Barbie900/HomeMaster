@@ -1,0 +1,305 @@
+# HomeMaster work packages
+#
+# A work package is ONE element of ONE job (for example "wc-frame" or "shower-glass"),
+# small enough to be explained in a single work card and done in one session.
+# Room sequences below put the packages in the order they must be done.
+#
+# Fields
+#   name   display names per language
+#   stage  A decide/plan, B strip-out, C rough-in, D substrate, E waterproofing,
+#          F surfaces, G fit-out, H finish and handover, O outdoor, S specialist
+#   task   the graph task (dependencies.yaml) whose preconditions apply
+#   src    where the technique is written: "file#heading text" relative to this folder.
+#          {room} is replaced by the room type id
+#   after  packages that must be finished before this one (only enforced when present in the room)
+#   who    diy | diy+pro (you plus a licensed pro for part) | pro
+#   time   typical effort for one person plus a helper (a guide, not a promise)
+#   opt    true when the package may not apply (the plan asks)
+#   part   optional: "rough-in" or "fit" when the source section has both parts. Use only that part
+#
+# The order of packages for every room type is in sequences.yaml (same folder).
+#
+# Order rule (checked by the validation script): in every room sequence each
+# package comes after all of its "after" packages that are in that sequence.
+
+schema_version: 1
+
+packages:
+
+  # ---------- A. Decide and plan (shared) ----------
+  survey-measure: {name: {en: "Survey and measure the room", sl: "Posnetek stanja in meritve prostora"}, stage: A, task: survey-and-permits, src: ["trades/planning.md#Principles of order"], after: [], who: diy, time: "2–4 h"}
+  room-decisions: {name: {en: "Decide the room (layout, products, levels)", sl: "Odločitve za prostor (postavitev, izdelki, višine)"}, stage: A, task: survey-and-permits, src: ["rooms/{room}.md#Decide first"], after: [survey-measure], who: diy, time: "1–3 evenings"}
+  order-long-lead: {name: {en: "Order long-lead items", sl: "Naročilo izdelkov z dolgim dobavnim rokom"}, stage: A, task: survey-and-permits, src: ["trades/planning.md#Budget and lead times"], after: [room-decisions], who: diy, time: "2–4 h"}
+  panel-and-circuits: {name: {en: "Main panel and circuits plan", sl: "Razdelilna omara in tokokrogi"}, stage: A, task: panel-and-main-services, src: ["trades/electrical.md#Other rooms"], after: [room-decisions], who: pro, time: "electrician, 0.5–2 days", opt: true}
+  heating-plan: {name: {en: "Heating plan for the room", sl: "Načrt ogrevanja prostora"}, stage: A, task: heating-distribution, src: ["trades/heating.md#Whole house"], after: [room-decisions], who: diy+pro, time: "2–4 h", opt: true}
+  water-heating-plan: {name: {en: "Hot water system plan", sl: "Načrt priprave tople vode"}, stage: A, task: water-heating-plan, src: ["trades/water-heating.md#Options", "trades/water-heating.md#Sizing", "trades/water-heating.md#Planning"], after: [room-decisions], who: diy, time: "2–4 h", opt: true}
+  smart-plan: {name: {en: "Smart home plan and standard", sl: "Načrt pametnega doma"}, stage: A, task: smart-home-plan, src: ["trades/smart-home.md#Choose the system", "trades/smart-home.md#Planning"], after: [room-decisions], who: diy, time: "2–4 h", opt: true}
+
+  # ---------- B. Protect and strip out (shared) ----------
+  protect-and-isolate: {name: {en: "Isolate services and protect the home", sl: "Izklop priključkov in zaščita doma"}, stage: B, task: demolition, src: ["trades/demolition.md#Before you swing anything"], after: [survey-measure], who: diy, time: "2–4 h"}
+  strip-out: {name: {en: "Strip-out (demolition)", sl: "Rušitvena dela"}, stage: B, task: demolition, src: ["trades/demolition.md#Method"], after: [protect-and-isolate], who: diy, time: "1–3 days"}
+  substrate-check: {name: {en: "Check the substrate and record dimensions", sl: "Pregled podlage in vpis mer"}, stage: B, task: demolition, src: ["trades/demolition.md#Quality checks"], after: [strip-out], who: diy, time: "1–2 h"}
+
+  # ---------- C. Rough-in, general ----------
+  window-install: {name: {en: "Windows and external doors", sl: "Okna in vhodna vrata"}, stage: C, task: windows-install, src: ["trades/windows.md#Method (standard replacement window)"], after: [room-decisions], who: diy+pro, time: "0.5–1 day per window", opt: true}
+  insulate: {name: {en: "Thermal insulation and airtightness", sl: "Toplotna izolacija in zrakotesnost"}, stage: C, task: insulation, src: ["trades/insulation.md#The two rules"], after: [window-install], who: diy+pro, time: "1–3 days", opt: true}
+  partition-walls: {name: {en: "Partition walls and suspended ceilings", sl: "Predelne stene in spuščeni stropovi"}, stage: C, task: partitions-and-ceilings, src: ["trades/drywall.md#Dry rooms"], after: [strip-out], who: diy, time: "1–3 days", opt: true}
+  electrical-rough-in-room: {name: {en: "Electrical rough-in (chases, conduits, boxes)", sl: "Električna groba montaža (utori, cevi, doze)"}, stage: C, task: electrical-rough-in, src: ["trades/electrical.md#Planning checklist", "trades/electrical.md#Method: DIY preparation"], after: [strip-out, panel-and-circuits], who: diy+pro, time: "1–2 days"}
+  smart-cabling: {name: {en: "Network and smart-home cabling", sl: "Omrežno in kabliranje pametnega doma"}, stage: C, task: smart-home-cabling, src: ["trades/smart-home.md#Cabling"], after: [strip-out, smart-plan], who: diy, time: "0.5–2 days", opt: true}
+  heating-pipes-rough-in: {name: {en: "Heating pipes to the room", sl: "Cevi ogrevanja do prostora"}, stage: C, task: heating-distribution, src: ["trades/heating.md#Whole house"], after: [heating-plan, strip-out], who: diy+pro, time: "0.5–1 day", opt: true}
+  ventilation-duct: {name: {en: "Ventilation duct and fan", sl: "Zračni kanal in ventilator"}, stage: C, task: ventilation, src: ["trades/ventilation.md#Method"], after: [strip-out, electrical-rough-in-room], who: diy+pro, time: "0.5–1 day", opt: true}
+
+  # ---------- C. Bathroom rough-in by element ----------
+  layout-and-levels: {name: {en: "Layout and finished floor level", sl: "Razporeditev in kota gotovega tlaka"}, stage: C, task: plumbing-rough-in, src: ["rooms/bathroom.md#Decide first", "trades/plumbing.md#Decide before buying pipe"], after: [substrate-check, room-decisions], who: diy, time: "2–4 h"}
+  drain-lines: {name: {en: "Drain lines (stack to fixtures)", sl: "Odtočne cevi (od vertikale do pip)"}, stage: C, task: plumbing-rough-in, src: ["trades/plumbing.md#Element: drain lines"], after: [layout-and-levels], who: diy, time: "0.5–1 day"}
+  shower-drain-body: {name: {en: "Shower drain body", sl: "Odtok za tuš"}, stage: C, task: plumbing-rough-in, src: ["trades/sanitary.md#Shower drain"], after: [drain-lines], who: diy, time: "2–4 h"}
+  wc-frame: {name: {en: "WC frame (wall-hung WC)", sl: "Podometni WC element"}, stage: C, task: plumbing-rough-in, src: ["trades/sanitary.md#WC frame"], after: [drain-lines], who: diy, time: "3–5 h"}
+  supply-lines: {name: {en: "Cold and hot water supply lines", sl: "Dovodne cevi hladne in tople vode"}, stage: C, task: plumbing-rough-in, src: ["trades/plumbing.md#Element: supply lines"], after: [layout-and-levels], who: diy, time: "0.5–1 day"}
+  water-heating-install: {name: {en: "Hot water appliance", sl: "Naprava za toplo vodo"}, stage: C, task: water-heating-install, src: ["trades/water-heating.md#Installation"], after: [supply-lines, water-heating-plan], who: diy+pro, time: "0.5–1 day", opt: true}
+  plumbing-tests: {name: {en: "Pressure and drain tests, photographs", sl: "Tlačni preizkus, preizkus odtokov, fotografije"}, stage: C, task: plumbing-rough-in, src: ["trades/plumbing.md#Element: tests"], after: [drain-lines, supply-lines, wc-frame, shower-drain-body, k-sink-rough, k-appliance-stubs], who: diy, time: "2–3 h"}
+
+  # ---------- D. Substrates ----------
+  ufh-pipes: {name: {en: "Underfloor heating pipes", sl: "Cevi talnega ogrevanja"}, stage: D, task: underfloor-heating, src: ["trades/heating.md#Method"], after: [plumbing-tests, electrical-rough-in-room, heating-pipes-rough-in], who: diy+pro, time: "1 day", opt: true}
+  wall-repair: {name: {en: "Chase filling and plaster repair", sl: "Zapiranje utorov in popravilo ometa"}, stage: D, task: wall-plaster-repair, src: ["trades/walls.md#Method: repair"], after: [electrical-rough-in-room, plumbing-tests, heating-pipes-rough-in, ventilation-duct, kitchen-power, k-hood-duct, smart-cabling, window-install], who: diy, time: "1–2 days + drying"}
+  wet-drywall: {name: {en: "Drywall in wet areas", sl: "Suhomontaža v mokrih prostorih"}, stage: D, task: drywall-wet, src: ["trades/drywall.md#Method"], after: [plumbing-tests, electrical-rough-in-room], who: diy, time: "1–2 days", opt: true}
+  screed-pour: {name: {en: "Screed with falls", sl: "Estrih s padci"}, stage: D, task: screed, src: ["trades/screed.md#Method"], after: [wall-repair, wet-drywall, ufh-pipes, plumbing-tests, electrical-rough-in-room, shower-drain-body, mat-well], who: diy, time: "1 day + helper", opt: true}
+  screed-dry-cm: {name: {en: "Screed drying, heating-up protocol, CM test", sl: "Sušenje estriha, protokol ogrevanja, CM-meritev"}, stage: D, task: screed, src: ["trades/screed.md#Waiting times and the moisture test"], after: [screed-pour], who: diy, time: "1–8 weeks waiting", opt: true}
+  bath-install: {name: {en: "Bath installation", sl: "Montaža kadi"}, stage: D, task: sanitary-fit-out, src: ["trades/sanitary.md#Bath"], after: [plumbing-tests, screed-dry-cm, wet-drywall], who: diy, time: "3–5 h", opt: true}
+
+  # ---------- E. Waterproofing ----------
+  waterproof-select: {name: {en: "Choose and buy the waterproofing system", sl: "Izbira in nakup hidroizolacijskega sistema"}, stage: E, task: waterproofing, src: ["trades/waterproofing.md#Which system?", "trades/waterproofing.md#Coverage"], after: [room-decisions], who: diy, time: "2–3 h"}
+  waterproof-apply: {name: {en: "Apply the waterproofing (tape, collars, 2 coats)", sl: "Nanos hidroizolacije (trakovi, manšete, 2 sloja)"}, stage: E, task: waterproofing, src: ["trades/waterproofing.md#Method"], after: [screed-dry-cm, wall-repair, wet-drywall, shower-drain-body, waterproof-select, bath-install], who: diy, time: "1 day + 1 day curing"}
+  waterproof-flood-test: {name: {en: "Flood test and photographs", sl: "Preizkus z vodo in fotografije"}, stage: E, task: waterproofing, src: ["trades/waterproofing.md#Method"], after: [waterproof-apply], who: diy, time: "24 h waiting"}
+
+  # ---------- F. Surfaces ----------
+  ceiling-paint: {name: {en: "Ceiling (moisture-resistant paint)", sl: "Strop (barva za vlažne prostore)"}, stage: F, task: ceiling-finish, src: ["trades/walls.md#Ceilings and painting"], after: [wall-repair, ventilation-duct], who: diy, time: "3–5 h"}
+  tile-layout: {name: {en: "Tile layout (dry run)", sl: "Razpored ploščic (preizkus na suho)"}, stage: F, task: wall-tiling, src: ["trades/tiling.md#Layout"], after: [waterproof-flood-test], who: diy, time: "1–2 h"}
+  wall-tiles: {name: {en: "Wall tiling", sl: "Polaganje stenskih ploščic"}, stage: F, task: wall-tiling, src: ["trades/tiling.md#Method: walls"], after: [tile-layout, ceiling-paint], who: diy, time: "1–3 days"}
+  floor-tiles: {name: {en: "Floor tiling", sl: "Polaganje talnih ploščic"}, stage: F, task: floor-tiling, src: ["trades/tiling.md#Method: floor"], after: [wall-tiles, screed-dry-cm], who: diy, time: "1–2 days"}
+  grout: {name: {en: "Grouting", sl: "Fugiranje"}, stage: F, task: grouting, src: ["trades/tiling.md#Method: grouting"], after: [floor-tiles], who: diy, time: "0.5–1 day"}
+  door-and-threshold: {name: {en: "Door, frame and threshold", sl: "Vrata, podboj in prag"}, stage: F, task: door-install, src: ["trades/carpentry.md#Method"], after: [floor-tiles, floor-laying, floor-glue], who: diy, time: "3–5 h"}
+
+  # ---------- G. Fit-out (bathroom by element) ----------
+  wc-bowl: {name: {en: "WC bowl and flush plate", sl: "WC školjka in splakovalna tipka"}, stage: G, task: sanitary-fit-out, src: ["trades/sanitary.md#WC bowl and flush plate"], after: [grout, wc-frame], who: diy, time: "1–2 h"}
+  basin: {name: {en: "Basin and vanity unit", sl: "Umivalnik in omarica"}, stage: G, task: sanitary-fit-out, src: ["trades/sanitary.md#Basin and vanity unit"], after: [grout], who: diy, time: "2–4 h"}
+  shower-fixtures: {name: {en: "Shower mixer, head and taps", sl: "Tuš armatura, glava in pipe"}, stage: G, task: sanitary-fit-out, src: ["trades/sanitary.md#Taps, mixers and shower fixtures"], after: [grout], who: diy, time: "2–3 h"}
+  shower-glass: {name: {en: "Shower glass", sl: "Steklo za tuš"}, stage: G, task: shower-glass-install, src: ["trades/sanitary.md#Shower glass"], after: [grout, shower-fixtures], who: diy, time: "3–5 h + order after tiling", opt: true}
+  radiators-install: {name: {en: "Radiator or towel rail", sl: "Radiator ali kopalniški radiator"}, stage: G, task: heating-distribution, src: ["trades/heating.md#Radiators and towel rails"], after: [grout, paint-walls, heating-pipes-rough-in], who: diy+pro, time: "2–4 h", opt: true}
+  electrical-finish: {name: {en: "Electrical fit-out and measurements", sl: "Električna montaža in meritve"}, stage: G, task: electrical-fit-out, src: ["trades/electrical.md#Fit-out"], after: [grout, paint-walls, floor-laying, floor-glue, k-hood-fit], who: pro, time: "electrician, 0.5–1 day"}
+  silicone: {name: {en: "Silicone joints", sl: "Silikonski stiki"}, stage: G, task: silicone-joints, src: ["trades/tiling.md#Method: silicone"], after: [wc-bowl, basin, shower-fixtures, shower-glass, bath-install], who: diy, time: "2–3 h"}
+  smart-commission: {name: {en: "Smart home commissioning and security", sl: "Zagon in varnost pametnega doma"}, stage: H, task: smart-home-commission, src: ["trades/smart-home.md#Commissioning and security"], after: [electrical-finish, smart-cabling], who: diy+pro, time: "0.5–1 day", opt: true}
+  handover-and-log: {name: {en: "Final tests, photographs and log", sl: "Končni preizkusi, fotografije in dnevnik"}, stage: H, task: survey-and-permits, src: ["trades/planning.md#Documentation"], after: [silicone, electrical-finish, kitchen-commission], who: diy, time: "1–2 h"}
+
+  # ---------- Kitchen ----------
+  kitchen-plan-freeze: {name: {en: "Freeze the kitchen drawing", sl: "Zamrznitev načrta kuhinje"}, stage: A, task: kitchen-plan, src: ["trades/kitchen.md#Ergonomics and layout", "trades/kitchen.md#Services"], after: [room-decisions], who: diy, time: "1–3 evenings"}
+  kitchen-gas-pro: {name: {en: "Gas line and appliance (licensed installer)", sl: "Plin in priklop naprave (pooblaščeni monter)"}, stage: C, task: kitchen-fit, src: ["rooms/kitchen.md#Room-specific rules and numbers"], after: [kitchen-plan-freeze], who: pro, time: "installer", opt: true}
+  kitchen-power: {name: {en: "Kitchen circuits and sockets", sl: "Tokokrogi in vtičnice v kuhinji"}, stage: C, task: electrical-rough-in, src: ["trades/kitchen.md#Services", "trades/electrical.md#Method: DIY preparation"], after: [strip-out, kitchen-plan-freeze, panel-and-circuits], who: diy+pro, time: "1–2 days"}
+
+  # ---------- Basement ----------
+  moisture-diagnosis: {name: {en: "Moisture diagnosis", sl: "Diagnostika vlage"}, stage: A, task: basement-diagnosis, src: ["trades/basement.md#Step 1"], after: [survey-measure], who: diy, time: "2–4 weeks of observation"}
+  radon-check: {name: {en: "Radon measurement", sl: "Meritev radona"}, stage: A, task: basement-diagnosis, src: ["trades/basement.md#Radon"], after: [survey-measure], who: diy, time: "about 3 months", opt: true}
+  outside-water-fixes: {name: {en: "Fix outside water causes", sl: "Odprava zunanjih vzrokov vode"}, stage: C, task: site-drainage, src: ["trades/basement.md#Step 2"], after: [moisture-diagnosis], who: diy+pro, time: "1–5 days"}
+
+  # ---------- Outdoor stairs ----------
+  stairs-geometry: {name: {en: "Measure and calculate the stair geometry", sl: "Meritve in izračun geometrije stopnic"}, stage: O, task: stairs-structure, src: ["trades/outdoor-stairs.md#Geometry"], after: [survey-measure], who: diy, time: "2–3 h"}
+  stairs-waterproof: {name: {en: "Outdoor waterproofing of the stairs", sl: "Zunanja hidroizolacija stopnic"}, stage: O, task: outdoor-waterproofing, src: ["trades/outdoor-surfaces.md#Build: tiles on a slab"], after: [stairs-handrail-anchors], who: diy, time: "1 day + curing"}
+  stairs-tiling: {name: {en: "Tiling the stairs", sl: "Ploščice na stopnicah"}, stage: O, task: outdoor-tiling, src: ["trades/outdoor-stairs.md#Surfaces", "trades/outdoor-stairs.md#Method (refurbish and tile existing concrete stairs)"], after: [stairs-waterproof], who: diy, time: "1–2 days"}
+  stairs-handrail-fit: {name: {en: "Handrail and guard", sl: "Ograja in držalo"}, stage: O, task: handrail, src: ["trades/outdoor-stairs.md#Handrail and guard"], after: [stairs-tiling], who: diy, time: "3–5 h"}
+
+  # ---------- Terrace and outdoor surfaces ----------
+  site-drainage-work: {name: {en: "Site drainage and ground levels", sl: "Odvodnjavanje in kote terena"}, stage: O, task: site-drainage, src: ["trades/outdoor-surfaces.md#Before anything"], after: [survey-measure], who: diy+pro, time: "1–3 days"}
+
+  # ---------- Wellness ----------
+  wellness-planning: {name: {en: "Wellness planning (power, floor load, ventilation)", sl: "Načrtovanje wellnessa (moč, nosilnost, prezračevanje)"}, stage: A, task: wellness-plan, src: ["trades/wellness.md#Planning"], after: [room-decisions], who: diy+pro, time: "1–2 days"}
+
+  # ---------- Roof and attic ----------
+  roof-inspection: {name: {en: "Roof and attic inspection", sl: "Pregled strehe in podstrešja"}, stage: A, task: roof-assessment, src: ["trades/roof.md#Inspection checklist"], after: [survey-measure], who: diy, time: "2–4 h"}
+  roof-safe-setup: {name: {en: "Safe access and fall protection", sl: "Varen dostop in varovanje pred padcem"}, stage: B, task: roof-assessment, src: ["trades/roof.md#Safe working"], after: [roof-inspection], who: diy+pro, time: "0.5–1 day"}
+  attic-conversion-pkg: {name: {en: "Attic conversion (structure, insulation, vapour control)", sl: "Preureditev podstrešja (konstrukcija, izolacija, parna zapora)"}, stage: C, task: attic-conversion, src: ["trades/roof.md#Attic conversion"], after: [r-insulation], who: diy+pro, time: "weeks", opt: true}
+
+  # ---------- Facade ----------
+
+  # ---------- Garden structures ----------
+
+  # ---------- Pools ----------
+
+  # ---------- Indoor stairs ----------
+  stairs-inspect: {name: {en: "Indoor stairs inspection (10 checks)", sl: "Pregled notranjih stopnic (10 preverjanj)"}, stage: A, task: indoor-stairs-inspection, src: ["trades/stairs-indoor.md#Inspection checklist"], after: [survey-measure], who: diy, time: "1–2 h"}
+  stairs-recalc: {name: {en: "Recalculate the rise with the finished floors", sl: "Izračun višine stopnic z gotovimi tlemi"}, stage: A, task: indoor-stairs-inspection, src: ["trades/stairs-indoor.md#Where it goes wrong"], after: [stairs-inspect], who: diy, time: "1 h"}
+
+  # ---------- Chimney and stove ----------
+
+  # ---------- Garden and irrigation ----------
+  irrigation-measure: {name: {en: "Measure flow and pressure, plan the zones", sl: "Meritev pretoka in tlaka, načrt con"}, stage: A, task: irrigation-plan, src: ["trades/irrigation.md#Measure first"], after: [survey-measure], who: diy, time: "2–3 h"}
+  irrigation-sleeves: {name: {en: "Sleeves under future surfaces", sl: "Zaščitne cevi pod bodočimi površinami"}, stage: C, task: garden-groundwork, src: ["trades/landscaping.md#Groundwork"], after: [irrigation-measure], who: diy, time: "2–4 h"}
+  irrigation-winterise: {name: {en: "Winterising", sl: "Zazimitev"}, stage: H, task: irrigation-install, src: ["trades/irrigation.md#Winterising"], after: [irrigation-commission], who: diy, time: "recurring, 1 h"}
+
+  # =====================================================================
+  # ELEMENT-LEVEL PACKAGES (all other rooms)
+  # =====================================================================
+
+  # ---------- Dry rooms: electrics, walls, paint, floor, doors ----------
+  dr-socket-plan: {name: {en: "Plan sockets and switches with the furniture", sl: "Načrt vtičnic in stikal glede na pohištvo"}, stage: A, task: electrical-rough-in, src: ["trades/electrical.md#Element: sockets and switches"], after: [room-decisions], who: diy, time: "2–3 h"}
+  dr-lighting-plan: {name: {en: "Plan the lighting (layers, spots, switches)", sl: "Načrt razsvetljave (plasti, spot luči, stikala)"}, stage: A, task: electrical-rough-in, src: ["trades/electrical.md#Element: lighting"], after: [room-decisions], who: diy, time: "2–3 h"}
+  tv-media-wall: {name: {en: "TV and media wall (backing, cables)", sl: "TV stena (ojačitev, kabli)"}, stage: C, task: electrical-rough-in, src: ["trades/electrical.md#Element: TV and media wall"], after: [dr-socket-plan, partition-walls], who: diy, time: "2–4 h", opt: true}
+  panel-work-pro: {name: {en: "Distribution board work (electrician)", sl: "Delo na razdelilni omari (elektrikar)"}, stage: C, task: panel-and-main-services, src: ["trades/electrical.md#Element: distribution board work"], after: [room-decisions], who: pro, time: "electrician", opt: true}
+  window-sills-reveals: {name: {en: "Window sills and reveals", sl: "Okenske police in špalete"}, stage: C, task: windows-install, src: ["trades/windows.md#Element: window sills and reveals"], after: [window-install], who: diy, time: "3–5 h per window", opt: true}
+  entrance-door: {name: {en: "Entrance door", sl: "Vhodna vrata"}, stage: C, task: windows-install, src: ["trades/windows.md#Element: entrance door"], after: [room-decisions], who: diy+pro, time: "0.5–1 day", opt: true}
+  mat-well: {name: {en: "Recessed mat well", sl: "Vdolbina za predpražnik"}, stage: D, task: screed, src: ["trades/carpentry.md#Element: threshold and mat well"], after: [strip-out], who: diy, time: "2–4 h", opt: true}
+  wall-prep: {name: {en: "Prepare the walls (clean, fill, sand)", sl: "Priprava sten (čiščenje, kitanje, brušenje)"}, stage: F, task: wall-finish, src: ["trades/painting.md#Element: preparing the surface"], after: [wall-repair, partition-walls, insulate, window-sills-reveals], who: diy, time: "0.5–1 day"}
+  wall-skim: {name: {en: "Skim coat and plasterboard joints", sl: "Glajenje in stiki mavčnih plošč"}, stage: F, task: wall-finish, src: ["trades/painting.md#Element: skim coat and joints"], after: [wall-prep], who: diy, time: "1–3 days", opt: true}
+  wall-prime: {name: {en: "Prime the walls", sl: "Osnovni premaz sten"}, stage: F, task: painting, src: ["trades/painting.md#Element: priming"], after: [wall-prep, wall-skim], who: diy, time: "3–5 h"}
+  paint-ceiling: {name: {en: "Paint the ceiling", sl: "Barvanje stropa"}, stage: F, task: painting, src: ["trades/painting.md#Element: ceiling"], after: [wall-prime], who: diy, time: "3–5 h"}
+  paint-walls: {name: {en: "Paint the walls", sl: "Barvanje sten"}, stage: F, task: painting, src: ["trades/painting.md#Element: walls"], after: [paint-ceiling], who: diy, time: "0.5–1 day"}
+  floor-substrate: {name: {en: "Check and level the floor substrate", sl: "Pregled in izravnava podlage"}, stage: F, task: floor-covering-dry, src: ["trades/flooring.md#Element: substrate check and levelling"], after: [paint-walls, screed-dry-cm], who: diy, time: "0.5–1 day + drying"}
+  floor-underlay: {name: {en: "Moisture barrier and underlay", sl: "Parna zapora in podlaga"}, stage: F, task: floor-covering-dry, src: ["trades/flooring.md#Element: moisture barrier and underlay"], after: [floor-substrate], who: diy, time: "1–2 h", opt: true}
+  floor-laying: {name: {en: "Lay the floating floor", sl: "Polaganje plavajočega tlaka"}, stage: F, task: floor-covering-dry, src: ["trades/flooring.md#Element: laying the planks"], after: [floor-underlay, floor-substrate], who: diy, time: "0.5–1.5 days", opt: true}
+  floor-glue: {name: {en: "Glue parquet or vinyl", sl: "Lepljenje parketa ali vinila"}, stage: F, task: floor-covering-dry, src: ["trades/flooring.md#Element: gluing parquet or vinyl"], after: [floor-substrate], who: diy, time: "1–2 days", opt: true}
+  floor-doors-pipes: {name: {en: "Door frames, pipes and thresholds", sl: "Podboji, cevi in pragovi"}, stage: F, task: floor-covering-dry, src: ["trades/flooring.md#Element: doors, pipes and thresholds"], after: [floor-laying, floor-glue], who: diy, time: "2–4 h"}
+  door-interior: {name: {en: "Interior door and frame", sl: "Notranja vrata in podboj"}, stage: F, task: door-install, src: ["trades/carpentry.md#Element: interior door and frame"], after: [floor-laying, floor-glue, paint-walls], who: diy, time: "3–5 h per door"}
+  skirting-board: {name: {en: "Skirting boards", sl: "Talne letve"}, stage: F, task: skirting-and-trim, src: ["trades/carpentry.md#Element: skirting boards"], after: [floor-laying, floor-glue, door-interior, paint-walls], who: diy, time: "3–5 h"}
+  paint-trim: {name: {en: "Paint trim, doors and radiators", sl: "Barvanje letev, vrat in radiatorjev"}, stage: F, task: painting, src: ["trades/painting.md#Element: trim, doors and radiators"], after: [skirting-board, door-interior], who: diy, time: "0.5–1 day"}
+  wardrobe-built-in: {name: {en: "Built-in wardrobe", sl: "Vgradna omara"}, stage: G, task: skirting-and-trim, src: ["trades/carpentry.md#Element: built-in wardrobe"], after: [floor-laying, floor-glue, paint-walls], who: diy, time: "1–2 days", opt: true}
+  shoe-coat-storage: {name: {en: "Shoe and coat storage", sl: "Shramba za obutev in jakne"}, stage: G, task: skirting-and-trim, src: ["trades/carpentry.md#Element: shoe and coat storage"], after: [paint-walls], who: diy, time: "3–5 h", opt: true}
+  blinds-shading: {name: {en: "Blinds and external shading", sl: "Žaluzije in zunanja senčila"}, stage: G, task: windows-install, src: ["trades/windows.md#Element: blinds and external shading"], after: [window-install, paint-walls], who: diy+pro, time: "2–4 h per window", opt: true}
+  smoke-alarms: {name: {en: "Smoke and CO alarms", sl: "Javljalniki dima in CO"}, stage: G, task: electrical-fit-out, src: ["trades/electrical.md#Element: smoke and CO alarms"], after: [paint-ceiling, electrical-rough-in-room], who: diy, time: "1–2 h"}
+  floor-finish: {name: {en: "Finish and protect the floor", sl: "Zaključek in zaščita tal"}, stage: H, task: floor-covering-dry, src: ["trades/flooring.md#Element: finishing the floor"], after: [skirting-board], who: diy, time: "1–2 h"}
+
+  # ---------- Kitchen elements ----------
+  k-sink-rough: {name: {en: "Sink water and drain stubs", sl: "Vodovod in odtok za korito"}, stage: C, task: plumbing-rough-in, src: ["trades/kitchen.md#Element: sink, tap and waste"], part: rough-in, after: [strip-out, kitchen-plan-freeze], who: diy, time: "3–5 h"}
+  k-appliance-stubs: {name: {en: "Dishwasher and washing machine stubs", sl: "Priključki za pomivalni in pralni stroj"}, stage: C, task: plumbing-rough-in, src: ["trades/kitchen.md#Element: dishwasher and washing machine"], part: rough-in, after: [strip-out, kitchen-plan-freeze], who: diy, time: "2–4 h"}
+  k-hob-oven-circuit: {name: {en: "Hob and oven circuits (electrician)", sl: "Tokokrog za ploščo in pečico (elektrikar)"}, stage: C, task: electrical-rough-in, src: ["trades/kitchen.md#Element: induction hob and oven"], part: rough-in, after: [kitchen-plan-freeze, panel-and-circuits], who: pro, time: "electrician"}
+  k-hood-duct: {name: {en: "Extractor duct and power", sl: "Kanal in napajanje za napo"}, stage: C, task: ventilation, src: ["trades/kitchen.md#Element: extractor hood"], part: rough-in, after: [kitchen-plan-freeze, strip-out], who: diy+pro, time: "0.5–1 day"}
+  k-base-units: {name: {en: "Base units", sl: "Spodnji elementi"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: base units"], after: [floor-laying, floor-glue, floor-tiles, paint-walls, k-sink-rough, kitchen-power], who: diy, time: "0.5–1 day"}
+  k-wall-units: {name: {en: "Wall units", sl: "Zgornji elementi"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: wall units"], after: [k-base-units], who: diy, time: "0.5–1 day"}
+  k-worktop: {name: {en: "Worktop", sl: "Delovni pult"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: worktop"], after: [k-base-units], who: diy, time: "0.5–1 day"}
+  k-sink-fit: {name: {en: "Sink, tap and waste", sl: "Korito, pipa in sifon"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: sink, tap and waste"], part: fit, after: [k-worktop], who: diy, time: "2–3 h"}
+  k-dishwasher-fit: {name: {en: "Dishwasher and washing machine", sl: "Pomivalni in pralni stroj"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: dishwasher and washing machine"], part: fit, after: [k-sink-fit], who: diy, time: "1–2 h"}
+  k-hob-oven-fit: {name: {en: "Hob and oven", sl: "Kuhalna plošča in pečica"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: induction hob and oven"], part: fit, after: [k-worktop, k-hob-oven-circuit], who: diy+pro, time: "2–3 h"}
+  k-hood-fit: {name: {en: "Extractor hood", sl: "Napa"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: extractor hood"], part: fit, after: [k-wall-units, k-hood-duct, kitchen-power], who: diy+pro, time: "2–3 h"}
+  k-plinths-lights: {name: {en: "Plinths, under-cabinet lights, handles", sl: "Sokli, lučke pod elementi, ročaji"}, stage: G, task: kitchen-fit, src: ["trades/kitchen.md#Element: plinths, lights and handles"], after: [k-base-units, k-worktop], who: diy, time: "3–5 h"}
+  backsplash: {name: {en: "Splashback tiling", sl: "Obloga stene za pultom"}, stage: G, task: wall-tiling, src: ["trades/tiling.md#Method: walls"], after: [k-worktop], who: diy, time: "0.5–1 day", opt: true}
+  kitchen-commission: {name: {en: "Kitchen commissioning and leak test", sl: "Zagon kuhinje in preizkus tesnosti"}, stage: H, task: kitchen-fit, src: ["trades/kitchen.md#Quality checks"], after: [k-hood-fit, k-hob-oven-fit, k-dishwasher-fit, backsplash], who: diy, time: "2–3 h"}
+
+  # ---------- Basement ----------
+  bs-interior-slurry: {name: {en: "Interior waterproofing slurry", sl: "Notranja hidroizolacijska malta"}, stage: E, task: basement-waterproofing, src: ["trades/basement.md#Element: interior waterproofing slurry"], after: [moisture-diagnosis, outside-water-fixes], who: diy, time: "2–4 days"}
+  bs-floor: {name: {en: "Basement floor (damp-proof layer, finish)", sl: "Tla v kleti (zaščita pred vlago, zaključek)"}, stage: D, task: basement-waterproofing, src: ["trades/basement.md#Element: floor in the basement"], after: [bs-interior-slurry], who: diy, time: "2–4 days"}
+  bs-sump: {name: {en: "Sump and interior drain", sl: "Črpalna jama in notranja drenaža"}, stage: C, task: basement-waterproofing, src: ["trades/basement.md#Element: sump and interior drain"], after: [moisture-diagnosis], who: diy+pro, time: "1–2 days", opt: true}
+  bs-ventilation: {name: {en: "Ventilation and dehumidifier", sl: "Prezračevanje in razvlaževalnik"}, stage: H, task: basement-waterproofing, src: ["trades/basement.md#Element: ventilation and dehumidifier"], after: [bs-interior-slurry], who: diy, time: "2–3 h"}
+  bs-walls-salts: {name: {en: "Walls: salts and breathable finish", sl: "Stene: soli in zračen zaključek"}, stage: F, task: basement-waterproofing, src: ["trades/basement.md#Element: walls and salts"], after: [bs-interior-slurry], who: diy, time: "1–2 days", opt: true}
+
+  # ---------- Outdoor stairs ----------
+  os-foundation: {name: {en: "New stairs: foundation and concrete (engineer)", sl: "Nove stopnice: temelj in beton (statik)"}, stage: O, task: stairs-structure, src: ["trades/outdoor-stairs.md#Element: foundation and concrete steps"], after: [stairs-geometry], who: diy+pro, time: "2–5 days + curing", opt: true}
+  os-repair-steps: {name: {en: "Repair and level existing steps", sl: "Popravilo in izravnava obstoječih stopnic"}, stage: O, task: stairs-structure, src: ["trades/outdoor-stairs.md#Element: repairing and levelling existing steps"], after: [stairs-geometry], who: diy, time: "1–3 days + curing", opt: true}
+  stairs-handrail-anchors: {name: {en: "Handrail anchors and sleeves (before waterproofing)", sl: "Sidra in tulci za ograjo (pred hidroizolacijo)"}, stage: O, task: handrail, src: ["trades/outdoor-stairs.md#Handrail and guard"], after: [os-foundation, os-repair-steps], who: diy, time: "2–3 h"}
+  os-nosings-joints: {name: {en: "Nosings, drip edges and joints", sl: "Robniki, kapnice in stiki"}, stage: O, task: outdoor-tiling, src: ["trades/outdoor-stairs.md#Element: nosings, drip edges and joints"], after: [stairs-tiling], who: diy, time: "3–5 h"}
+  stairs-lighting: {name: {en: "Step lighting and drainage (licensed)", sl: "Osvetlitev in odvodnjavanje stopnic (pooblaščeni elektrikar)"}, stage: O, task: electrical-fit-out, src: ["trades/outdoor-stairs.md#Element: step lighting and drainage"], after: [stairs-tiling], who: diy+pro, time: "0.5–1 day", opt: true}
+
+  # ---------- Terrace and outdoor surfaces ----------
+  t-excavation: {name: {en: "Excavation and sub-base", sl: "Izkop in tampon"}, stage: O, task: outdoor-substrate, src: ["trades/outdoor-surfaces.md#Element: excavation and sub-base"], after: [site-drainage-work], who: diy, time: "1–3 days"}
+  t-drains: {name: {en: "Drains and outlets", sl: "Odtoki in požiralniki"}, stage: O, task: site-drainage, src: ["trades/outdoor-surfaces.md#Element: drains and outlets"], after: [t-excavation], who: diy, time: "0.5–1 day"}
+  terrace-sleeves: {name: {en: "Sleeves for irrigation, power and data", sl: "Zaščitne cevi za namakanje, elektriko in podatke"}, stage: O, task: outdoor-substrate, src: ["trades/outdoor-surfaces.md#Before anything"], after: [t-excavation], who: diy, time: "2–4 h"}
+  t-edge: {name: {en: "Edge restraint", sl: "Robna opora"}, stage: O, task: paving, src: ["trades/outdoor-surfaces.md#Element: edge restraint"], after: [t-excavation], who: diy, time: "0.5–1 day", opt: true}
+  t-bedding-laying: {name: {en: "Bedding and laying pavers", sl: "Posteljica in polaganje tlakovcev"}, stage: O, task: paving, src: ["trades/outdoor-surfaces.md#Element: bedding and laying pavers"], after: [t-edge, terrace-sleeves], who: diy, time: "2–4 days", opt: true}
+  t-joints: {name: {en: "Joints and final compaction", sl: "Fuge in končno utrjevanje"}, stage: O, task: paving, src: ["trades/outdoor-surfaces.md#Element: joints and final compaction"], after: [t-bedding-laying], who: diy, time: "3–5 h", opt: true}
+  t-slab-waterproof: {name: {en: "Slab waterproofing", sl: "Hidroizolacija plošče"}, stage: O, task: outdoor-waterproofing, src: ["trades/outdoor-surfaces.md#Element: slab waterproofing"], after: [terrace-sleeves], who: diy, time: "1 day + curing", opt: true}
+  t-tiles: {name: {en: "Tiles on the slab and joints", sl: "Ploščice na plošči in fuge"}, stage: O, task: outdoor-tiling, src: ["trades/outdoor-surfaces.md#Element: tiles on the slab and joints"], after: [t-slab-waterproof], who: diy, time: "2–4 days + curing", opt: true}
+  t-joists: {name: {en: "Joists and supports", sl: "Podkonstrukcija in podpore"}, stage: O, task: decking, src: ["trades/outdoor-surfaces.md#Element: joists and supports"], after: [terrace-sleeves], who: diy, time: "1–2 days", opt: true}
+  t-boards: {name: {en: "Boards, fixing and edges", sl: "Deske, pritrditev in robovi"}, stage: O, task: decking, src: ["trades/outdoor-surfaces.md#Element: boards, fixing and edges"], after: [t-joists], who: diy, time: "1–3 days", opt: true}
+  terrace-lighting: {name: {en: "Outdoor lighting and sockets (licensed)", sl: "Zunanja razsvetljava in vtičnice (pooblaščeni elektrikar)"}, stage: O, task: electrical-fit-out, src: ["trades/electrical.md#Other rooms"], after: [t-joints, t-tiles, t-boards], who: pro, time: "electrician", opt: true}
+
+  # ---------- Wellness ----------
+  w-power-heater: {name: {en: "Power supply and heater (electrician)", sl: "Napajanje in peč (elektrikar)"}, stage: C, task: sauna-build, src: ["trades/wellness.md#Element: electrical supply and heater"], after: [wellness-planning], who: pro, time: "electrician", opt: true}
+  w-floor-drain: {name: {en: "Floor, drain and waterproofing", sl: "Tla, odtok in hidroizolacija"}, stage: D, task: wellness-plan, src: ["trades/wellness.md#Element: floor, drain and waterproofing"], after: [wellness-planning, strip-out], who: diy, time: "1–2 days"}
+  w-frame-vapour: {name: {en: "Sauna frame, insulation and vapour barrier", sl: "Okvir savne, izolacija in parna zapora"}, stage: S, task: sauna-build, src: ["trades/wellness.md#Element: frame, insulation and vapour barrier"], after: [w-floor-drain, electrical-rough-in-room], who: diy, time: "2–3 days", opt: true}
+  w-cladding-benches: {name: {en: "Cladding and benches", sl: "Obloga in klopi"}, stage: S, task: sauna-build, src: ["trades/wellness.md#Element: cladding and benches"], after: [w-frame-vapour], who: diy, time: "2–4 days", opt: true}
+  w-cabin-vent: {name: {en: "Cabin ventilation", sl: "Prezračevanje kabine"}, stage: S, task: sauna-build, src: ["trades/wellness.md#Element: cabin ventilation"], after: [w-frame-vapour], who: diy, time: "2–4 h", opt: true}
+  w-door-glass: {name: {en: "Cabin door and glass", sl: "Vrata in steklo kabine"}, stage: S, task: sauna-build, src: ["trades/wellness.md#Element: door and glass"], after: [w-cladding-benches], who: diy, time: "3–5 h", opt: true}
+  w-steam-gen: {name: {en: "Steam generator and outlets", sl: "Generator pare in izhodi"}, stage: S, task: steam-room-build, src: ["trades/wellness.md#Element: steam generator and outlets"], after: [waterproof-apply, w-floor-drain], who: diy+pro, time: "1–2 days", opt: true}
+  hot-tub-setup: {name: {en: "Hot tub placement and connection", sl: "Postavitev in priklop masažnega bazena"}, stage: S, task: wellness-plan, src: ["trades/wellness.md#Element: hot tub placement"], after: [wellness-planning], who: diy+pro, time: "1–2 days", opt: true}
+
+  # ---------- Roof and attic ----------
+  r-tiles: {name: {en: "Replace broken tiles", sl: "Zamenjava počenih strešnikov"}, stage: C, task: roof-repair, src: ["trades/roof.md#Element: replacing broken tiles"], after: [roof-safe-setup], who: diy+pro, time: "2–4 h", opt: true}
+  r-flashings: {name: {en: "Flashings, chimney and valleys", sl: "Obrobe, dimnik in žlebovi"}, stage: C, task: roof-repair, src: ["trades/roof.md#Element: flashings, chimney and valleys"], after: [roof-safe-setup], who: diy+pro, time: "0.5–1 day", opt: true}
+  r-gutters: {name: {en: "Gutters and downpipes", sl: "Žlebovi in odtočne cevi"}, stage: C, task: roof-repair, src: ["trades/roof.md#Element: gutters and downpipes"], after: [roof-safe-setup], who: diy, time: "0.5–1 day", opt: true}
+  r-windows: {name: {en: "Roof windows", sl: "Strešna okna"}, stage: C, task: windows-install, src: ["trades/roof.md#Element: roof windows"], after: [roof-safe-setup], who: diy+pro, time: "1 day per window", opt: true}
+  r-insulation: {name: {en: "Attic insulation layers and vapour barrier", sl: "Izolacija podstrešja in parna zapora"}, stage: C, task: insulation, src: ["trades/roof.md#Element: attic insulation layers"], after: [r-tiles, r-flashings], who: diy, time: "1–3 days", opt: true}
+
+  # ---------- Facade ----------
+  facade-prep: {name: {en: "Facade survey, permit and plan", sl: "Pregled fasade, dovoljenje in načrt"}, stage: O, task: facade-preparation, src: ["trades/facade.md#Before you start"], after: [r-tiles, r-flashings, r-gutters, window-install, site-drainage-work], who: diy+pro, time: "1–2 days"}
+  f-scaffold: {name: {en: "Scaffold and protection", sl: "Oder in zaščita"}, stage: O, task: facade-preparation, src: ["trades/facade.md#Element: scaffold and protection"], after: [facade-prep], who: pro, time: "scaffolder, 1 day"}
+  f-substrate-plinth: {name: {en: "Substrate repair and plinth", sl: "Popravilo podlage in sokel"}, stage: O, task: facade-preparation, src: ["trades/facade.md#Element: substrate repair and plinth"], after: [f-scaffold], who: diy, time: "2–5 days"}
+  f-starter: {name: {en: "Starter profile and first row", sl: "Podnožni profil in prva vrsta"}, stage: O, task: facade-etics, src: ["trades/facade.md#Element: starter profile and first row"], after: [f-substrate-plinth], who: diy+pro, time: "1 day", opt: true}
+  f-glue-boards: {name: {en: "Gluing insulation boards", sl: "Lepljenje izolacijskih plošč"}, stage: O, task: facade-etics, src: ["trades/facade.md#Element: gluing boards"], after: [f-starter], who: diy+pro, time: "days to weeks", opt: true}
+  f-dowel-sand: {name: {en: "Dowelling and sanding", sl: "Pritrditev s fasadnimi vijaki in brušenje"}, stage: O, task: facade-etics, src: ["trades/facade.md#Element: dowelling and sanding"], after: [f-glue-boards], who: diy+pro, time: "1–3 days", opt: true}
+  f-reveals-sills: {name: {en: "Reveals, corners and sills", sl: "Špalete, vogali in police"}, stage: O, task: facade-render, src: ["trades/facade.md#Element: reveals, corners and sills"], after: [f-dowel-sand], who: diy+pro, time: "2–4 days", opt: true}
+  f-basecoat-mesh: {name: {en: "Base coat and mesh", sl: "Armirni sloj in mrežica"}, stage: O, task: facade-render, src: ["trades/facade.md#Element: base coat and mesh"], after: [f-reveals-sills], who: diy+pro, time: "days + curing", opt: true}
+  f-primer-render: {name: {en: "Primer and finish render", sl: "Osnovni premaz in zaključni omet"}, stage: O, task: facade-render, src: ["trades/facade.md#Element: primer and finish render"], after: [f-basecoat-mesh], who: diy+pro, time: "days", opt: true}
+  f-details: {name: {en: "Details, penetrations and sealing", sl: "Detajli, prebojí in tesnenje"}, stage: O, task: facade-render, src: ["trades/facade.md#Element: details and sealing"], after: [f-primer-render], who: diy, time: "1–2 days", opt: true}
+  facade-render-repair: {name: {en: "Render repair only", sl: "Samo popravilo ometa"}, stage: O, task: facade-render, src: ["trades/facade.md#Render repair only"], after: [facade-prep], who: diy, time: "2–5 days", opt: true}
+
+  # ---------- Garden structures ----------
+  gs-plan: {name: {en: "Plan the garden structure (permit, loads, utilities)", sl: "Načrt vrtne zgradbe (dovoljenje, obremenitve, vodi)"}, stage: A, task: garden-structure-plan, src: ["trades/garden.md#Planning first"], after: [room-decisions], who: diy, time: "1–2 days"}
+  gs-foundation: {name: {en: "Foundation for the structure", sl: "Temelji vrtne zgradbe"}, stage: O, task: garden-foundation, src: ["trades/garden.md#Foundations"], after: [gs-plan, site-drainage-work], who: diy, time: "1–2 days + 7 days curing"}
+  gs-shed: {name: {en: "Shed", sl: "Vrtna uta"}, stage: O, task: garden-structure-build, src: ["trades/garden.md#Element: shed"], after: [gs-foundation], who: diy, time: "3–6 days", opt: true}
+  gs-pergola: {name: {en: "Pergola or carport", sl: "Pergola ali nadstrešek za avto"}, stage: O, task: garden-structure-build, src: ["trades/garden.md#Element: pergola and carport"], after: [gs-foundation], who: diy, time: "3–6 days", opt: true}
+  gs-fence: {name: {en: "Fence posts and panels", sl: "Ograja: stebri in polnila"}, stage: O, task: garden-structure-build, src: ["trades/garden.md#Element: fence posts and panels"], after: [gs-plan], who: diy, time: "1–3 days", opt: true}
+  gs-gate: {name: {en: "Gate", sl: "Vrata"}, stage: O, task: garden-structure-build, src: ["trades/garden.md#Element: gate"], after: [gs-fence], who: diy+pro, time: "0.5–1 day", opt: true}
+  gs-retaining: {name: {en: "Retaining wall (engineer above 0.5–1 m)", sl: "Oporni zid (statik nad 0,5–1 m)"}, stage: O, task: garden-structure-plan, src: ["trades/garden.md#Element: retaining wall"], after: [gs-plan], who: diy+pro, time: "days", opt: true}
+  gs-raised-beds: {name: {en: "Raised beds", sl: "Dvignjene grede"}, stage: O, task: garden-structure-build, src: ["trades/garden.md#Element: raised beds"], after: [gs-plan], who: diy, time: "3–5 h", opt: true}
+
+  # ---------- Pools ----------
+  pool-planning: {name: {en: "Pool planning, permit and barrier", sl: "Načrtovanje bazena, dovoljenje in ograja"}, stage: A, task: pool-plan, src: ["trades/pool.md#Planning"], after: [room-decisions], who: diy+pro, time: "1–3 weeks"}
+  pool-dig: {name: {en: "Excavation and base", sl: "Izkop in podlaga"}, stage: O, task: pool-structure, src: ["trades/pool.md#Element: excavation and base"], after: [pool-planning], who: pro, time: "1–3 days (contractor)"}
+  pool-shell-pen: {name: {en: "Shell and penetrations", sl: "Školjka in prebojí"}, stage: O, task: pool-structure, src: ["trades/pool.md#Element: shell and penetrations"], after: [pool-dig], who: pro, time: "2–10 days"}
+  pool-plumbing: {name: {en: "Plumbing and technical room", sl: "Cevi in tehnični prostor"}, stage: O, task: pool-technical, src: ["trades/pool.md#Element: plumbing and technical room"], after: [pool-shell-pen], who: diy+pro, time: "2–4 days"}
+  pool-electrics: {name: {en: "Pool electrics (licensed)", sl: "Elektrika bazena (pooblaščeni elektrikar)"}, stage: O, task: pool-technical, src: ["trades/pool.md#Element: electrics (licensed)"], after: [pool-shell-pen], who: pro, time: "electrician"}
+  pool-backfill: {name: {en: "Backfill and edge", sl: "Zasutje in rob"}, stage: O, task: pool-structure, src: ["trades/pool.md#Element: backfill and edge"], after: [pool-plumbing, pool-electrics], who: diy+pro, time: "2–4 days"}
+  pool-surrounds: {name: {en: "Pool surrounds (tiles, pavers, decking)", sl: "Okolica bazena (ploščice, tlakovci, les)"}, stage: O, task: outdoor-substrate, src: ["trades/outdoor-surfaces.md#Choose the build-up"], after: [pool-backfill], who: diy, time: "3–7 days"}
+  pool-heating-cover: {name: {en: "Pool heating and cover", sl: "Ogrevanje in prekrivalo bazena"}, stage: O, task: pool-heating-and-cover, src: ["trades/pool.md#Outdoor pool specifics"], after: [pool-plumbing, pool-electrics], who: diy+pro, time: "1–2 days", opt: true}
+  pool-startup: {name: {en: "First fill and start-up", sl: "Prvo polnjenje in zagon"}, stage: H, task: pool-technical, src: ["trades/pool.md#Element: first fill and start-up"], after: [pool-backfill, pool-plumbing, pool-electrics], who: diy, time: "2 days"}
+  pool-barrier: {name: {en: "Cover and safety barrier", sl: "Prekrivalo in varnostna ograja"}, stage: H, task: pool-technical, src: ["trades/pool.md#Element: cover and barrier"], after: [pool-backfill], who: diy, time: "1–2 days"}
+  pool-season: {name: {en: "Opening, closing and winter care", sl: "Odpiranje, zapiranje in zimska zaščita"}, stage: H, task: pool-season-care, src: ["trades/pool.md#Outdoor pool specifics"], after: [pool-startup], who: diy, time: "recurring"}
+
+  # ---------- Indoor stairs ----------
+  stairs-measure: {name: {en: "Measure the stair", sl: "Meritve stopnic"}, stage: A, task: indoor-stairs-inspection, src: ["trades/stairs-indoor.md#Element: measuring the stair"], after: [stairs-inspect], who: diy, time: "1–2 h"}
+  st-creaks: {name: {en: "Fix creaks and loose treads", sl: "Odprava škripanja in odprtih stopnic"}, stage: F, task: indoor-stairs-work, src: ["trades/stairs-indoor.md#Element: creaks and loose treads"], after: [stairs-recalc], who: diy, time: "2–4 h", opt: true}
+  st-tread: {name: {en: "Replace a tread or riser", sl: "Zamenjava stopnice ali dviga"}, stage: F, task: indoor-stairs-work, src: ["trades/stairs-indoor.md#Element: replacing a tread"], after: [st-creaks], who: diy, time: "3–5 h", opt: true}
+  st-rail: {name: {en: "Balustrade and handrail", sl: "Ograja in držalo"}, stage: F, task: indoor-stairs-work, src: ["trades/stairs-indoor.md#Element: balustrade and handrail"], after: [st-creaks], who: diy, time: "0.5–1 day", opt: true}
+  st-refinish: {name: {en: "Refinish the treads", sl: "Obnova stopnic"}, stage: F, task: indoor-stairs-work, src: ["trades/stairs-indoor.md#Element: refinishing the treads"], after: [st-tread, st-rail], who: diy, time: "2–4 days incl. curing", opt: true}
+  st-lighting: {name: {en: "Stair lighting", sl: "Osvetlitev stopnic"}, stage: G, task: electrical-fit-out, src: ["trades/stairs-indoor.md#Element: stair lighting"], after: [st-refinish], who: diy+pro, time: "3–5 h", opt: true}
+
+  # ---------- Chimney and stove ----------
+  chimney-check: {name: {en: "Chimney inspection and report (sweep)", sl: "Pregled dimnika in poročilo (dimnikar)"}, stage: A, task: chimney-assessment, src: ["trades/chimney.md#Element: sweep's inspection and report"], after: [survey-measure], who: diy+pro, time: "1–2 h + report"}
+  ch-air: {name: {en: "Combustion air supply", sl: "Dovod zraka za zgorevanje"}, stage: C, task: chimney-work, src: ["trades/chimney.md#Element: combustion air"], after: [chimney-check], who: diy+pro, time: "0.5–1 day"}
+  hearth-and-protection: {name: {en: "Hearth, wall protection and clearances", sl: "Podnožje, zaščita sten in razdalje"}, stage: C, task: chimney-work, src: ["trades/chimney.md#Element: hearth and wall protection"], after: [chimney-check], who: diy, time: "1 day"}
+  ch-liner-pro: {name: {en: "Liner and stove connection (installer)", sl: "Vložka in priklop peči (monter)"}, stage: S, task: chimney-work, src: ["trades/chimney.md#Element: liner and connection pipe"], after: [hearth-and-protection, ch-air], who: pro, time: "installer"}
+  ch-first-fire: {name: {en: "First fire and safe operation", sl: "Prvo kurjenje in varna uporaba"}, stage: H, task: chimney-work, src: ["trades/chimney.md#Element: first fire and operation"], after: [ch-liner-pro], who: diy+pro, time: "2–3 h"}
+  ch-alarms: {name: {en: "CO and smoke alarms", sl: "Javljalniki CO in dima"}, stage: G, task: chimney-assessment, src: ["trades/chimney.md#Element: CO and smoke alarms"], after: [chimney-check], who: diy, time: "1 h"}
+
+  # ---------- Garden and irrigation ----------
+  garden-survey: {name: {en: "Garden survey and design", sl: "Pregled in zasnova vrta"}, stage: A, task: garden-design-plan, src: ["trades/landscaping.md#Survey"], after: [survey-measure], who: diy, time: "1–2 days"}
+  garden-groundwork-pkg: {name: {en: "Groundwork: levels, soil, drainage", sl: "Zemeljska dela: kote, zemlja, odvodnjavanje"}, stage: O, task: garden-groundwork, src: ["trades/landscaping.md#Groundwork"], after: [garden-survey, site-drainage-work], who: diy+pro, time: "2–5 days"}
+  g-paths: {name: {en: "Paths and edges", sl: "Poti in robniki"}, stage: O, task: garden-groundwork, src: ["trades/landscaping.md#Element: paths and edges"], after: [garden-groundwork-pkg], who: diy, time: "2–4 days", opt: true}
+  g-lighting: {name: {en: "Garden lighting (low voltage)", sl: "Vrtna razsvetljava (nizka napetost)"}, stage: O, task: garden-planting, src: ["trades/landscaping.md#Element: garden lighting"], after: [garden-groundwork-pkg], who: diy+pro, time: "0.5–1 day", opt: true}
+  garden-lawn: {name: {en: "Lawn (seed or turf)", sl: "Trata (seme ali ruša)"}, stage: O, task: garden-planting, src: ["trades/landscaping.md#Lawn"], after: [garden-groundwork-pkg, irrigation-commission], who: diy, time: "1–2 days"}
+  garden-beds: {name: {en: "Beds, shrubs and perennials", sl: "Grede, grmovnice in trajnice"}, stage: O, task: garden-planting, src: ["trades/landscaping.md#Beds, shrubs and perennials"], after: [garden-groundwork-pkg], who: diy, time: "1–3 days"}
+  garden-trees-hedges: {name: {en: "Trees and hedges", sl: "Drevesa in žive meje"}, stage: O, task: garden-planting, src: ["trades/landscaping.md#Trees and hedges"], after: [garden-groundwork-pkg], who: diy, time: "1–2 days"}
+  g-compost: {name: {en: "Compost and soil care", sl: "Kompost in nega tal"}, stage: H, task: garden-planting, src: ["trades/landscaping.md#Element: compost and soil care"], after: [garden-beds], who: diy, time: "2–3 h", opt: true}
+  ir-supply: {name: {en: "Supply connection, backflow, filter, regulator", sl: "Priključek, protipovratni ventil, filter, regulator"}, stage: O, task: irrigation-install, src: ["trades/irrigation.md#Element: supply connection"], after: [irrigation-measure, irrigation-sleeves], who: diy+pro, time: "2–4 h"}
+  ir-main-manifold: {name: {en: "Main line and valve manifold", sl: "Glavni vod in razdelilnik ventilov"}, stage: O, task: irrigation-install, src: ["trades/irrigation.md#Element: main line and valve manifold"], after: [ir-supply, garden-groundwork-pkg], who: diy, time: "0.5–1 day"}
+  ir-controller: {name: {en: "Controller, wiring and sensors", sl: "Krmilnik, ožičenje in senzorji"}, stage: O, task: irrigation-install, src: ["trades/irrigation.md#Element: controller, wiring and sensors"], after: [ir-main-manifold], who: diy+pro, time: "3–5 h"}
+  ir-sprinklers: {name: {en: "Sprinklers (lawn)", sl: "Razpršilci (trata)"}, stage: O, task: irrigation-install, src: ["trades/irrigation.md#Element: sprinklers"], after: [ir-main-manifold], who: diy, time: "0.5–1 day", opt: true}
+  ir-drip: {name: {en: "Drip lines (beds, trees, hedges)", sl: "Kapljično namakanje (grede, drevesa, žive meje)"}, stage: O, task: irrigation-install, src: ["trades/irrigation.md#Element: drip lines"], after: [ir-main-manifold], who: diy, time: "0.5–1 day", opt: true}
+  ir-rain-tank: {name: {en: "Rain tank and pump", sl: "Zbiralnik deževnice in črpalka"}, stage: O, task: irrigation-install, src: ["trades/irrigation.md#Element: rain tank and pump"], after: [irrigation-measure], who: diy+pro, time: "1 day", opt: true}
+  irrigation-commission: {name: {en: "Test, adjust and program", sl: "Preizkus, nastavitev in programiranje"}, stage: H, task: irrigation-install, src: ["trades/irrigation.md#Method"], after: [ir-main-manifold, ir-controller, ir-sprinklers, ir-drip], who: diy, time: "2–3 h"}
+
+  # ---------- Smart home ----------
+  sh-cabinet: {name: {en: "Network cabinet and structured cabling", sl: "Omrežna omara in strukturirano kabliranje"}, stage: C, task: smart-home-cabling, src: ["trades/smart-home.md#Element: network cabinet"], after: [smart-plan, strip-out], who: diy, time: "1–3 days"}
+  sh-wifi: {name: {en: "Wi-Fi access points", sl: "Dostopne točke Wi-Fi"}, stage: G, task: smart-home-commission, src: ["trades/smart-home.md#Element: Wi-Fi access points"], after: [sh-cabinet], who: diy, time: "2–4 h"}
+  sh-lighting: {name: {en: "Lighting control", sl: "Upravljanje razsvetljave"}, stage: G, task: smart-home-commission, src: ["trades/smart-home.md#Element: lighting control"], after: [smart-cabling], who: diy+pro, time: "0.5–1 day", opt: true}
+  sh-heating: {name: {en: "Heating and room thermostats", sl: "Ogrevanje in sobni termostati"}, stage: G, task: smart-home-commission, src: ["trades/smart-home.md#Element: heating and room thermostats"], after: [smart-cabling], who: diy+pro, time: "0.5–1 day", opt: true}
+  sh-blinds: {name: {en: "Blinds and shading", sl: "Žaluzije in senčila"}, stage: G, task: smart-home-commission, src: ["trades/smart-home.md#Element: blinds and shading"], after: [smart-cabling], who: diy+pro, time: "0.5–1 day", opt: true}
+  sh-sensors: {name: {en: "Sensors and alarms", sl: "Senzorji in alarmi"}, stage: G, task: smart-home-commission, src: ["trades/smart-home.md#Element: sensors and alarms"], after: [smart-cabling], who: diy, time: "3–5 h"}
+  sh-cameras: {name: {en: "Cameras and access", sl: "Kamere in dostop"}, stage: G, task: smart-home-commission, src: ["trades/smart-home.md#Element: cameras and access"], after: [smart-cabling], who: diy, time: "3–5 h", opt: true}
+  sh-energy: {name: {en: "Energy, PV and EV charging (planning)", sl: "Energija, sončna elektrarna in polnilnica (načrt)"}, stage: A, task: smart-home-plan, src: ["trades/smart-home.md#Element: energy, PV and EV charging"], after: [smart-plan, panel-and-circuits], who: diy+pro, time: "1–2 days", opt: true}

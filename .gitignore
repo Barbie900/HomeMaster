@@ -1,0 +1,12 @@
+# Never commit a real renovation project into the plugin repo.
+# Your own home lives in a separate folder (see README).
+/my-home/
+CLAUDE.local.md
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

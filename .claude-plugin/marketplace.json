@@ -1,0 +1,14 @@
+{
+  "name": "homemaster",
+  "description": "HomeMaster: a DIY home renovation planner for Claude Code.",
+  "owner": {
+    "name": "HomeMaster contributors"
+  },
+  "plugins": [
+    {
+      "name": "homemaster",
+      "source": "./",
+      "description": "DIY home renovation planner: connected trade knowledge, dependency checks, work instructions, tool and material lists."
+    }
+  ]
+}

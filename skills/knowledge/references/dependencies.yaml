@@ -1,0 +1,1145 @@
+# HomeMaster dependency graph
+#
+# Agents MUST consult this before writing instructions, plans or shopping lists.
+# Schema: see docs/ARCHITECTURE.md
+#
+# severity:
+#   critical  = do not start. Risk of failure, water damage, injury or legal issues
+#   important = quality or cost risk
+#   tip       = good practice
+#
+# Values marked "typical" vary by product: the manufacturer's data sheet wins.
+
+schema_version: 1
+
+# Facts that many tasks depend on. Decide these EARLY.
+reference_lines:
+  finished_floor_level:
+    name: {en: Finished floor level (FFL), sl: Kota gotovega tlaka}
+    decide_before: [plumbing-rough-in, electrical-rough-in, screed, door-install]
+    why: >
+      Wall-hung WC frames, waste outlets, shower drains, socket heights, door
+      frames and thresholds all reference the finished floor. Add up the full
+      floor build-up (insulation + screed + waterproofing + adhesive + tile)
+      and mark a level reference line (commonly 100 cm above FFL) on every
+      wall before any rough-in. Most expensive DIY errors start here.
+  wet_zones:
+    name: {en: Wet zones layout, sl: Razporeditev mokrih con}
+    decide_before: [plumbing-rough-in, electrical-rough-in, waterproofing]
+    why: >
+      The positions of the shower, bath and basin define the electrical safety
+      zones (IEC 60364-7-701), which surfaces need waterproofing and where the
+      floor has to slope. Moving a shower later means redoing three trades.
+
+tasks:
+
+  demolition:
+    name: {en: Strip-out and demolition, sl: Rušitvena dela}
+    trade: demolition
+    requires:
+      - check: Water isolated and lines drained
+        severity: critical
+      - check: Room circuits switched off at the panel and verified dead with a voltage tester (not just the switch)
+        severity: critical
+      - check: Walls to be removed or chased are confirmed non-load-bearing
+        severity: critical
+        why: Load-bearing walls need a structural engineer. In apartment blocks, also the building manager.
+      - check: Buildings from before ~1995 checked for asbestos (cement boards, old floor tiles/adhesives, pipe lagging)
+        severity: critical
+        why: Asbestos removal is regulated. Do not break or sand suspicious material.
+      - check: In apartment blocks, house rules for noisy work hours and permission from the building manager for work on shared stacks/risers
+        severity: important
+      - check: A second working toilet/shower available if you live in the home during works
+        severity: important
+    blocks: [plumbing-rough-in, electrical-rough-in, ventilation]
+    warnings:
+      - Reassess the substrate after strip-out (moisture, cracks, hollow plaster, floor flatness). Material quantities and the plan may change.
+      - Dust from cutting/chasing masonry contains silica. Use an FFP3 mask, an M-class extractor on tools and seal the doorways.
+
+  plumbing-rough-in:
+    name: {en: Plumbing and drainage rough-in, sl: Vodovodne in odtočne inštalacije (groba montaža)}
+    trade: plumbing
+    requires:
+      - check: Finished floor level decided and the reference line marked
+        severity: critical
+        ref: finished_floor_level
+      - check: Sanitary items chosen with their installation data sheets (WC frame, basin, shower drain type, bath, taps)
+        severity: critical
+        why: Outlet heights and positions come from the product sheets. Buy before rough-in.
+      - check: Shower type decided (tray vs. tiled walk-in; point vs. linear drain) and the drain's build-up height fits the floor build-up
+        severity: critical
+      - check: Waste pipes can reach the stack with a fall of at least 1% (typically 1.5–2%)
+        severity: critical
+    blocks: [screed, drywall-wet, waterproofing, wall-plaster-repair]
+    wait_after: Pressure test passed (typical 1.5× working pressure, held per the pipe system's test protocol) before closing anything
+    warnings:
+      - Photograph and measure every pipe before closing walls/floor.
+      - Insulate hot and cold pipes. This prevents condensation on cold pipes and heat loss.
+      - Fix the WC frame and taps to the level reference, not to the current floor.
+
+  electrical-rough-in:
+    name: {en: Electrical rough-in, sl: Elektro inštalacije (groba montaža)}
+    trade: electrical
+    requires:
+      - check: Wet zones layout fixed, so zones 0/1/2 and the required IP ratings are known
+        severity: critical
+        ref: wet_zones
+      - check: Bathroom circuits protected by a 30 mA RCD
+        severity: critical
+      - check: Regional rules on who may do and certify the work checked (see regions/)
+        severity: critical
+        why: In most of Europe the installation must be inspected and measured by a licensed electrician before use.
+      - check: Finished floor level known (socket and switch heights)
+        severity: important
+        ref: finished_floor_level
+    blocks: [wall-plaster-repair, drywall-wet, waterproofing]
+    warnings:
+      - No sockets inside zones 0–2. Sockets go at least 60 cm from the bath or shower edge (zone 2 boundary).
+      - Plan supplementary equipotential bonding if the regional rules require it.
+      - Run conduits for the extract fan, a mirror light, a heated towel rail and underfloor heating now, even if you install them later.
+      - Photograph and measure every cable route before closing.
+      - Run the network, bus and sensor cables, a neutral wire at every switch box and the spare conduits in this same pass if you want a smart home (see smart-home-cabling).
+
+  ventilation:
+    name: {en: Ventilation / extract fan, sl: Prezračevanje / odvodni ventilator}
+    trade: ventilation
+    requires:
+      - check: Duct route to the outside or shaft confirmed (not into an attic or cavity)
+        severity: critical
+      - check: Power for the fan planned in the electrical rough-in (timer/humidity sensor)
+        severity: important
+    blocks: [ceiling-finish]
+    warnings:
+      - A windowless bathroom needs mechanical extraction. Leave a door undercut of about 1 cm or a grille so replacement air can come in.
+
+  wall-plaster-repair:
+    name: {en: Chase filling and plaster repair, sl: Zapiranje utorov in popravila ometa}
+    trade: walls
+    requires:
+      - check: Plumbing pressure test passed
+        severity: critical
+      - check: Electrical rough-in done and photographed
+        severity: important
+    blocks: [waterproofing, wall-tiling]
+    wait_after: Typical 1 day per mm of plaster thickness for lime-cement render (data sheet); gypsum plaster is not suitable in wet zones
+    warnings:
+      - Walls must be flat for tiling. Check with a 2 m straightedge. Deviation over ~3 mm/2 m means more adhesive bed and bad tile lines.
+
+  drywall-wet:
+    name: {en: Drywall in wet areas (boxing, partitions), sl: Suhomontaža v mokrih prostorih}
+    trade: drywall
+    requires:
+      - check: Board type suitable for wet areas (impregnated H-board in splash zones, cement board in showers)
+        severity: critical
+      - check: Pipes pressure-tested and WC frame fixed to the reference line
+        severity: critical
+    blocks: [waterproofing, wall-tiling]
+    warnings:
+      - Impregnated board is NOT waterproofing. Showers still need a membrane.
+      - Add backing (wood/metal) now for heavy items such as a basin, mirror cabinet, grab bars or a towel rail.
+      - Tiles on drywall: stud spacing typically ≤ 40 cm for single-layer boards (up to 60 cm with a second layer or if the board's data sheet allows). Check the board's maximum tile weight.
+
+  underfloor-heating:
+    name: {en: Underfloor heating pipes, sl: Talno ogrevanje (cevi)}
+    trade: heating
+    optional: true
+    requires:
+      - check: Floor build-up height fits (insulation + pipes + screed cover) under the FFL
+        severity: critical
+        ref: finished_floor_level
+      - check: Pipes pressure-tested and kept under pressure while the screed is poured
+        severity: critical
+    blocks: [screed]
+
+  screed:
+    name: {en: Screed / floor levelling, sl: Estrih / izravnava tal}
+    trade: screed
+    requires:
+      - check: All pipes, cables and UFH in the floor are finished and tested
+        severity: critical
+      - check: Perimeter edge insulation strip installed along all walls
+        severity: critical
+        why: Lets the screed move. Without it the screed and tiles crack.
+      - check: Height set to FFL minus (waterproofing + adhesive + tile)
+        severity: critical
+        ref: finished_floor_level
+      - check: For a tiled walk-in shower, a fall of 1–2% to the drain built into the screed
+        severity: critical
+    blocks: [waterproofing, floor-tiling]
+    wait_after: >
+      Until the CM moisture test passes. For tiles, typical limits are cement
+      screed ≤ 2.0 CM-% (≤ 1.8 heated) and calcium sulfate/anhydrite ≤ 0.5 CM-%
+      (≤ 0.3 heated). Rule of thumb for cement screed: about 1 week per cm for
+      the first 4 cm, slower after. Measure, don't count days.
+    how_to_verify: >
+      CM (carbide) measurement: take samples from the lower third of the screed
+      thickness at 2–3 spots (one in the shower area), away from heating pipes (check the
+      photos of the pipe layout first), crush the sample, weigh the amount the
+      device specifies and measure with a CM device. Rent the device, or ask the
+      screed supplier or a flooring contractor to measure. A cheap electronic
+      moisture meter is NOT a valid substitute.
+    needs_tools: [CM device (rent or hire the measurement)]
+    warnings:
+      - if: underfloor_heating
+        text: >
+          Run a heating-up (functional + drying) protocol before covering. Cement
+          screed typically from day 21, anhydrite from day 7. Keep a signed protocol.
+      - Self-levelling compound over an old floor needs the matching primer, and its own drying time before waterproofing.
+
+  waterproofing:
+    name: {en: Waterproofing (liquid membrane / sheets), sl: Hidroizolacija}
+    trade: waterproofing
+    requires:
+      - check: Substrate dry (screed CM test passed, plaster cured), sound, clean and primed
+        severity: critical
+      - check: Shower falls and drain with sealing flange installed
+        severity: critical
+      - check: All pipe penetrations known, with collars/sleeves from the same system
+        severity: critical
+      - check: Corner sealing tape at every wall–floor and wall–wall junction in wet zones
+        severity: critical
+    blocks: [wall-tiling, floor-tiling]
+    wait_after: Typical 2–4 h between coats, 12–24 h before tiling (data sheet). Minimum dry film thickness per the system, usually 2 coats
+    warnings:
+      - "Coverage: the whole shower floor plus walls to at least 200 cm (or above the shower head); the whole bathroom floor is recommended; behind the bath and basin splash zones."
+      - Use one manufacturer's system (primer, membrane, tape, collars, adhesive). It is tested together and covered by the warranty.
+      - Brush the two coats in crossing directions. Check pinholes against the light.
+
+  wall-tiling:
+    name: {en: Wall tiling, sl: Polaganje stenskih ploščic}
+    trade: tiling
+    requires:
+      - check: Waterproofing cured
+        severity: critical
+      - check: Walls flat (2 m straightedge) and plumb
+        severity: important
+      - check: Tile layout planned (centre lines, cuts ≥ half a tile at visible edges, alignment with niches, taps and the floor joint grid)
+        severity: important
+      - check: Taps/outlets set to the planned finished wall surface (wall + adhesive + tile)
+        severity: important
+    blocks: [grouting]
+    warnings:
+      - Common sequence: fix a batten for the 2nd row, tile the walls, tile the floor, then lay the bottom wall row last so it stands on the floor tiles.
+      - Prime and paint the ceiling first coat before tiling, so drips don't hit finished tiles.
+
+  floor-tiling:
+    name: {en: Floor tiling, sl: Polaganje talnih ploščic}
+    trade: tiling
+    requires:
+      - check: Screed passed the CM moisture test (limits under screed.wait_after)
+        severity: critical
+      - check: if underfloor heating — heating-up protocol completed and signed; heating off or low during laying
+        severity: critical
+      - check: Waterproofing cured in wet zones
+        severity: critical
+      - check: Layout planned (start from the most visible line or the drain; avoid slivers at the door; align with the walls)
+        severity: important
+      - check: Door clearance and threshold with the new floor height checked
+        severity: important
+        ref: finished_floor_level
+    blocks: [grouting]
+    wait_after: Typical 24 h before grouting / foot traffic (rapid-set adhesive less; data sheet)
+    needs_tools: [2 m straightedge, laser or long level, notched trowel (notch per tile format), tile levelling system for large formats, wet tile saw (rent), wet-area vacuum or M-class extractor]
+    warnings:
+      - "Adhesive: at least C2TE for floors; C2TE S1 (deformable) for underfloor heating, large-format tiles (≥ 60 cm side) and drywall/wood substrates."
+      - "Aim for ≥ 90% adhesive contact on floors and in wet areas: notched trowel plus back-buttering for large formats. Lift a tile now and then to check."
+      - "Movement joints: perimeter gap at the walls (filled with silicone, not grout), and field joints over screed joints and at doorways."
+      - With a linear drain, plan the tile fall direction so cuts are minimal.
+      - if: underfloor_heating
+        text: >
+          Heating stays off (or at most ~15–18 °C room temperature) while laying and
+          until adhesive and grout have cured: typically at least 7 days, rapid-set
+          products less (data sheet). Then raise the flow temperature gradually
+          (typically about 5 °C per day) up to operating temperature. Log the dates.
+
+  grouting:
+    name: {en: Grouting, sl: Fugiranje}
+    trade: tiling
+    requires:
+      - check: Tile adhesive set (data sheet, typical 24 h)
+        severity: important
+      - check: Joints clean and free of adhesive to at least 2/3 depth
+        severity: important
+    blocks: [silicone-joints]
+    warnings:
+      - "Use at least CG2WA cement grout in showers, or epoxy (RG) for the most stain- and water-resistant joints (harder to apply). See /homemaster:compare."
+      - Grout NEVER goes into wall–floor corners or around fixtures. Those get silicone.
+
+  sanitary-fit-out:
+    name: {en: Sanitary fit-out, sl: Montaža sanitarne opreme}
+    trade: plumbing
+    requires:
+      - check: Grout cured
+        severity: important
+      - check: Drilling positions checked against the photos of pipes/cables
+        severity: critical
+    blocks: [silicone-joints]
+    warnings:
+      - Drill tiles with a tile/diamond bit without hammer action. Tape the spot, start slowly and cool porcelain with water.
+
+  silicone-joints:
+    name: {en: Silicone movement joints, sl: Silikonski (dilatacijski) stiki}
+    trade: tiling
+    requires:
+      - check: Grout fully cured and dry (typical 24 h+)
+        severity: important
+      - check: Sanitary items installed (bath filled with water while siliconing, so the joint is sized at its max load)
+        severity: important
+    warnings:
+      - Use sanitary (fungicide) silicone. Backer rod in deep joints. Tool with soapy water. Don't let silicone run over the grout.
+
+  electrical-fit-out:
+    name: {en: Electrical fit-out (fixtures, sockets), sl: Elektro montaža (svetila, vtičnice)}
+    trade: electrical
+    requires:
+      - check: Fixtures carry the IP rating for their zone (zone 1 ≥ IPX4, zone 0 IPX7; check regional rules)
+        severity: critical
+      - check: Final inspection/measurements by a licensed electrician arranged before regular use, where required
+        severity: critical
+
+  door-install:
+    name: {en: Door frame and door, sl: Montaža podboja in vrat}
+    trade: carpentry
+    requires:
+      - check: Floor tiling finished (frame sits on finished floor) or frame set to FFL
+        severity: important
+        ref: finished_floor_level
+    warnings:
+      - Leave an undercut of about 1 cm or a grille for air supply if the bathroom has an extract fan.
+
+  ceiling-finish:
+    name: {en: Ceiling finish / painting, sl: Strop / slikopleskarska dela}
+    trade: walls
+    requires:
+      - check: Ventilation ducting closed in
+        severity: important
+    warnings:
+      - In bathrooms use paint rated for humid rooms with an anti-mould additive. Prime first.
+
+  # ===========================================================================
+  # WHOLE HOUSE AND OTHER ROOMS
+  # Room types (references/rooms/<type>.md) list their own task sequence from
+  # this graph. Tasks are generic. Room files say where a room differs.
+  # ===========================================================================
+
+  survey-and-permits:
+    name: {en: Survey, permits and budget, sl: Posnetek stanja, dovoljenja in proračun}
+    trade: planning
+    requires:
+      - check: Whole home measured (floor plans, heights, wall thicknesses) and photographed
+        severity: important
+      - check: Load-bearing walls, chimneys and shafts identified (from plans or by an engineer)
+        severity: critical
+      - check: Permit question answered for every planned change (maintenance vs. reconstruction, facade, windows, terrace, outdoor stairs, wellness)
+        severity: critical
+        why: Work that needed a permit can be ordered removed and can void insurance or block a sale. See the region file.
+      - check: Consent of co-owners or the building manager for any work on common parts (apartment blocks)
+        severity: critical
+      - check: Hazardous materials survey (asbestos, lead paint, old wiring, radon in basements)
+        severity: critical
+      - check: Budget with 15–20% contingency and a priority order of rooms
+        severity: important
+    blocks: [demolition, panel-and-main-services, heating-distribution, insulation, windows-install, basement-diagnosis, kitchen-plan, wellness-plan, site-drainage]
+
+  panel-and-main-services:
+    name: {en: Main panel and house services, sl: Razdelilna omara in hišni priključki}
+    trade: electrical
+    requires:
+      - check: Load list for the whole renovation (induction hob and oven, heat pump, sauna heater, EV charger, workshop) compared with the connection capacity
+        severity: critical
+      - check: Panel has free modules and RCDs, earthing is in good condition and has been measured
+        severity: critical
+      - check: Work on the panel, meter and connection planned with a licensed electrician and the distribution company
+        severity: critical
+        why: Not DIY in most countries. Do it before the room rough-ins so all circuits are planned once.
+    blocks: [electrical-rough-in]
+    warnings:
+      - Lay the cables for all rooms in one rough-in pass. It is cheaper and cleaner than room by room.
+
+  heating-distribution:
+    name: {en: Heating plan and distribution (radiators or UFH), sl: Načrt ogrevanja in razvod}
+    trade: heating
+    requires:
+      - check: Heat loss per room calculated (or estimated by an installer) for the planned insulation and windows
+        severity: critical
+        why: Radiator, UFH and heat pump sizing depend on the final envelope. Do not size on the old windows.
+      - check: Heat source and its flow temperature decided (a heat pump needs a low flow temperature, so large emitters)
+        severity: critical
+      - check: Pipe routes to every room planned together with floor build-ups and wall chases
+        severity: important
+      - check: Connection of the heat source by a licensed installer where required
+        severity: critical
+    blocks: [underfloor-heating, screed, wall-plaster-repair]
+    wait_after: Pressure test per the pipe system's protocol before closing any chase or floor
+    warnings:
+      - Decide radiators or UFH per room. Low-temperature systems need larger radiators or floor heating.
+
+  insulation:
+    name: {en: Thermal insulation and airtightness, sl: Toplotna izolacija in zrakotesnost}
+    trade: insulation
+    requires:
+      - check: Moisture sources found and fixed first (roof or gutter leaks, rising damp, plumbing leaks)
+        severity: critical
+      - check: Dew point and vapour-control concept written down (where the airtight and vapour-control layer is, which side is warm)
+        severity: critical
+        why: Insulation on the wrong side, or without a control layer, causes mould and rot inside the structure.
+      - check: Interior insulation of old solid walls checked by someone competent (condensation risk on the cold surface)
+        severity: critical
+      - check: Window plane and reveals planned together with the insulation
+        severity: important
+    blocks: [partitions-and-ceilings, wall-finish]
+    warnings:
+      - Facade insulation (ETICS) usually needs a permit, scaffolding and a trained contractor. Subsidies often require certified work, so check before you start.
+
+  windows-install:
+    name: {en: Windows and external doors, sl: Okna in vhodna vrata}
+    trade: windows
+    requires:
+      - check: Openings measured on site after strip-out (width, height, depth, squareness) and the order confirmed with its lead time
+        severity: critical
+      - check: Permission for changes to the facade or windows (apartment block, heritage area)
+        severity: critical
+      - check: Window position relative to the insulation layer decided, with sill, reveals and blind boxes planned
+        severity: important
+      - check: Ventilation concept for the new airtight windows (trickle vents, regular airing or mechanical)
+        severity: important
+      - check: Two or three people and lifting aids available (glazing is heavy)
+        severity: important
+    blocks: [wall-plaster-repair, wall-finish]
+    wait_after: Low-expansion foam cures per the can (trim after hours to a day)
+    warnings:
+      - Seal in three layers. Airtight tape inside, insulating foam in the middle, weather-tight tape or sealant outside.
+      - Do not fix the frame through glazing blocks only. Support blocks carry the load, fixings only hold the position.
+
+  partitions-and-ceilings:
+    name: {en: Partitions and suspended ceilings (dry rooms), sl: Predelne stene in spuščeni stropovi}
+    trade: drywall
+    requires:
+      - check: The new wall is not load-bearing and does not hide pipes or cables that must stay accessible
+        severity: critical
+      - check: Services in the wall or ceiling run, tested and photographed before closing
+        severity: critical
+      - check: Heavy loads planned (TV, cabinets, radiators, kitchen wall units) with backing fixed in the frame
+        severity: important
+      - check: Sound and fire requirements checked (bedroom walls, party walls, escape routes)
+        severity: important
+    blocks: [wall-finish]
+
+  wall-finish:
+    name: {en: Skim coat, filling and sanding, sl: Glajenje, špahtlanje in brušenje}
+    trade: walls
+    requires:
+      - check: Chases and repairs dry per the data sheet, services photographed
+        severity: important
+      - check: Windows installed and sealed, no active damp
+        severity: critical
+      - check: Room at least +5 °C and not damp-saturated while working and drying
+        severity: important
+    blocks: [painting]
+    wait_after: Skim and filler dry per the data sheet (typically 1 to several days)
+    warnings:
+      - Sanding dust is very fine and spreads through the whole home. Seal the doors, use an extractor and do it before the floors are laid.
+
+  painting:
+    name: {en: Painting walls and ceilings, sl: Slikanje sten in stropov}
+    trade: painting
+    requires:
+      - check: Skim coat and filler dry, sanded and dusted off
+        severity: important
+      - check: Windows sealed and no active leaks or damp
+        severity: critical
+      - check: Room temperature and humidity within the paint's range (typically +5 to +25 °C, under 80% RH)
+        severity: important
+      - check: Dusty and wet work of that room finished (sanding, screed, tiling)
+        severity: important
+    blocks: [floor-covering-dry, skirting-and-trim, kitchen-fit]
+    warnings:
+      - Order is ceiling first, then walls, then trim, doors and radiators.
+
+  floor-covering-dry:
+    name: {en: Floor covering (laminate, parquet, vinyl), sl: Talne obloge (laminat, parket, vinil)}
+    trade: flooring
+    requires:
+      - check: Substrate dry for this covering (CM-% of the screed within the covering's limit, wood moisture for timber floors)
+        severity: critical
+        why: Moisture from the substrate makes wood swell and glue fail. Limits are in screed.md and the covering's data sheet.
+      - check: Substrate flat and clean (typically within 3 mm over 2 m for floating floors, 2 mm for glued or thin vinyl)
+        severity: important
+      - check: If underfloor heating, the heating-up protocol is done and the covering is approved for UFH (total thermal resistance within the maker's limit)
+        severity: critical
+      - check: Planks acclimatised in the room, unopened, for the time the maker states (typically 48 h or more)
+        severity: important
+      - check: Layout of fixed furniture decided (kitchen units, built-in wardrobes)
+        severity: important
+        why: Floating floors must not be pinned under fixed units, because they need room to move.
+      - check: Door clearances and transitions to other floors planned
+        severity: important
+        ref: finished_floor_level
+    blocks: [skirting-and-trim]
+    warnings:
+      - Leave an expansion gap at every wall, pipe and threshold (typically 8–15 mm, see flooring.md).
+
+  skirting-and-trim:
+    name: {en: Skirting, trim and finishing joints, sl: Letve, obloge in zaključni stiki}
+    trade: carpentry
+    requires:
+      - check: Floor installed and expansion gaps still free
+        severity: important
+      - check: Walls painted with at least the first coat
+        severity: tip
+    warnings:
+      - Fix skirting to the wall, never to the floor. A floating floor must be able to move under it.
+
+  kitchen-plan:
+    name: {en: Kitchen design freeze (before any rough-in), sl: Zamrznitev načrta kuhinje}
+    trade: kitchen
+    requires:
+      - check: Final kitchen drawing with exact positions of sink, hob, oven, fridge, dishwasher, washing machine and hood, plus appliance models and dimensions
+        severity: critical
+        why: Water, drain, power, gas and duct positions are fixed by this drawing. Moving them after plaster costs a lot.
+      - check: Cooking energy decided (induction or electric, or gas) and extraction type decided (duct outside or recirculation)
+        severity: critical
+      - check: Finished floor and wall build-ups known (tiles behind units or not, floor under units or not)
+        severity: important
+        ref: finished_floor_level
+    blocks: [plumbing-rough-in, electrical-rough-in, ventilation, wall-finish]
+
+  kitchen-fit:
+    name: {en: Kitchen installation, sl: Montaža kuhinje}
+    trade: kitchen
+    requires:
+      - check: Floor finished and protected, walls painted or tiled where the units will not cover them
+        severity: important
+      - check: Water, drain, power and duct stubs at the drawn positions, tested and capped
+        severity: critical
+      - check: Gas appliances connected and tested only by a licensed installer
+        severity: critical
+      - check: Wall type known and fixings chosen (solid, hollow, drywall with backing)
+        severity: critical
+      - check: Worktop cut-outs measured from the real appliances, and any stone or quartz worktop templated after the base units stand
+        severity: important
+    warnings:
+      - Seal every cut edge of chipboard worktops (sink, hob cut-outs). Swollen edges are the usual failure.
+
+  basement-diagnosis:
+    name: {en: Basement moisture diagnosis, sl: Diagnostika vlage v kleti}
+    trade: basement
+    requires:
+      - check: Moisture source identified (condensation, rising damp, lateral or hydrostatic water, leaking pipes, gutters or ground grading)
+        severity: critical
+        why: Treating the wrong cause wastes money. Interior coatings do not fix water pressure from outside.
+      - check: Cracks checked for movement over several weeks (marks or crack gauges)
+        severity: critical
+      - check: Radon measurement considered (long-term detector, typically about 3 months)
+        severity: important
+    blocks: [basement-waterproofing, site-drainage]
+
+  basement-waterproofing:
+    name: {en: Basement waterproofing and drying, sl: Hidroizolacija in sušenje kleti}
+    trade: basement
+    requires:
+      - check: Outside causes fixed first (gutters, downpipes, grading away from the wall, drainage)
+        severity: critical
+      - check: Salts and old coatings removed from the wall surface
+        severity: important
+      - check: Chosen method matches the diagnosed cause (see basement.md)
+        severity: critical
+    blocks: [wall-finish, floor-covering-dry, floor-tiling, insulation]
+    wait_after: Monitor moisture (and ideally a full wet season) before closing the walls with finishes
+    warnings:
+      - Do not put vapour-tight paint or interior insulation on a wall that is still taking in water.
+
+  site-drainage:
+    name: {en: Site drainage and ground levels, sl: Odvodnjavanje okolice in kote terena}
+    trade: outdoor-surfaces
+    requires:
+      - check: Ground falls away from the building (at least 2%, ideally 5% over the first 2 m)
+        severity: critical
+      - check: Downpipes and drains lead to a permitted discharge (sewer, soakaway, watercourse) that can take the water
+        severity: critical
+      - check: Underground utilities located before digging
+        severity: critical
+    blocks: [outdoor-substrate]
+
+  outdoor-substrate:
+    name: {en: Outdoor substrate (sub-base, slab, falls), sl: Podlaga za zunanje površine}
+    trade: outdoor-surfaces
+    requires:
+      - check: Finished surface level at least 15 cm below the damp-proof course, or as local rules say, and falling away from the wall
+        severity: critical
+      - check: Frost-free foundation or compacted sub-base of the depth that suits the load and soil
+        severity: critical
+      - check: Falls set (about 2% for tiles and pavers, 1% or more for decking) and drainage outlets planned
+        severity: critical
+      - check: Empty sleeves for irrigation, power, lighting and data are laid under the future surface and their ends are marked
+        severity: critical
+        why: Digging up a finished terrace for one cable costs far more than a plastic pipe now.
+      - check: If the terrace is above a heated room, it is treated as a roof build-up and checked by a professional
+        severity: critical
+    blocks: [outdoor-waterproofing, paving, decking]
+
+  outdoor-waterproofing:
+    name: {en: Outdoor waterproofing under tiles, sl: Hidroizolacija pod zunanjimi ploščicami}
+    trade: outdoor-surfaces
+    requires:
+      - check: Concrete slab at least 28 days old, sound, clean and sloped
+        severity: critical
+      - check: Membrane system rated for outdoor use and frost, with drainage and edge details
+        severity: critical
+      - check: Posts, handrail anchors and drains are fitted or sleeved before the membrane goes on
+        severity: important
+    blocks: [outdoor-tiling]
+    wait_after: Cure per the system data sheet, protected from rain
+
+  outdoor-tiling:
+    name: {en: Outdoor tiling (terrace and steps), sl: Zunanje ploščice (terasa in stopnice)}
+    trade: outdoor-surfaces
+    requires:
+      - check: Tiles are frost-resistant (very low water absorption) and slip-resistant for wet use
+        severity: critical
+      - check: Flexible frost-resistant adhesive and the floating-and-buttering method for full contact
+        severity: critical
+      - check: Movement joints planned (perimeter, every few metres, at every step edge)
+        severity: critical
+      - check: Weather window above +5 °C with no rain or frost until the adhesive and grout have cured
+        severity: critical
+    warnings:
+      - Water that gets under outdoor tiles freezes and lifts them. Full adhesive contact, falls and open drainage are what matter.
+
+  paving:
+    name: {en: Paving on a gravel bed, sl: Tlakovanje na tamponu}
+    trade: outdoor-surfaces
+    requires:
+      - check: Sub-base compacted in layers and falls checked with string and level
+        severity: critical
+      - check: Edge restraint (concrete haunching or kerb) planned
+        severity: important
+      - check: Plate compactor available (rent) and utility lines marked
+        severity: important
+
+  decking:
+    name: {en: Decking (wood or composite), sl: Lesena ali kompozitna terasa}
+    trade: outdoor-surfaces
+    requires:
+      - check: Substrate with falls and drainage, joists clear of standing water and ventilated underneath
+        severity: critical
+      - check: Board type, joist spacing and fixing system matched (see outdoor-surfaces.md)
+        severity: important
+      - check: Gaps for expansion and drainage planned
+        severity: important
+
+  stairs-structure:
+    name: {en: Outdoor stairs, structure and geometry, sl: Zunanje stopnice, konstrukcija in geometrija}
+    trade: outdoor-stairs
+    requires:
+      - check: Riser and tread dimensions calculated and consistent over the whole flight (see outdoor-stairs.md)
+        severity: critical
+        why: Uneven risers are the classic cause of falls.
+      - check: New or rebuilt stairs checked by an engineer, with a frost-free foundation
+        severity: critical
+      - check: Permit and guard-rail rules checked for the drop height
+        severity: critical
+    blocks: [outdoor-waterproofing, handrail]
+
+  handrail:
+    name: {en: Handrail and guard, sl: Ograja in držalo}
+    trade: outdoor-stairs
+    requires:
+      - check: Fixings go into solid structure, not into tiles or render alone
+        severity: critical
+      - check: Height, post spacing and gap sizes meet the local rules for the drop
+        severity: critical
+      - check: Anchor positions planned before waterproofing and tiling, with sealed sleeves
+        severity: important
+
+  wellness-plan:
+    name: {en: Wellness planning (sauna, steam, hot tub), sl: Načrt wellnessa}
+    trade: wellness
+    requires:
+      - check: Floor load checked for tub or pool (a filled hot tub can weigh 1.5–2.5 t) by an engineer
+        severity: critical
+      - check: Electrical capacity and circuits planned with a licensed electrician (sauna heater, steam generator, pumps)
+        severity: critical
+      - check: Ventilation, humidity removal and a floor drain planned
+        severity: critical
+      - check: Fire, escape and insurance requirements checked
+        severity: important
+    blocks: [plumbing-rough-in, electrical-rough-in, ventilation, waterproofing, sauna-build, steam-room-build]
+
+  sauna-build:
+    name: {en: Sauna construction, sl: Gradnja savne}
+    trade: wellness
+    requires:
+      - check: Heater power matched to cabin volume and connected by a licensed electrician
+        severity: critical
+      - check: Clearances to combustibles per the heater maker, with heat-rated cables, fittings and lights
+        severity: critical
+      - check: Insulation, then a taped vapour-barrier foil on the warm side, then an air gap, then cladding
+        severity: critical
+      - check: Fresh-air inlet and exhaust planned, door opens outward and has no lock
+        severity: critical
+    blocks: [electrical-fit-out]
+
+  steam-room-build:
+    name: {en: Steam room construction, sl: Gradnja parne kopeli}
+    trade: wellness
+    requires:
+      - check: Steam-tight waterproofing on all surfaces including the ceiling
+        severity: critical
+      - check: Ceiling sloped (at least 5°, better 10–15°) so condensate runs to the walls
+        severity: critical
+      - check: Steam generator sized to the volume and placed outside the cabin, with floor drain and ventilation
+        severity: critical
+    blocks: [wall-tiling]
+
+  # ===========================================================================
+  # ROOF AND ATTIC, FACADE, GARDEN STRUCTURES, POOL, INDOOR STAIRS
+  # ===========================================================================
+
+  roof-assessment:
+    name: {en: Roof and attic assessment, sl: Pregled strehe in podstrešja}
+    trade: roof
+    requires:
+      - check: Roof inspected from the ground (binoculars) and from inside the attic (daylight, stains, wet or rotten timber, sagging, insulation, ventilation)
+        severity: critical
+      - check: Covering material identified (asbestos-cement roofs are never walked on, drilled or cut)
+        severity: critical
+      - check: Safe access planned (scaffold with edge protection, roof ladder, harness with anchor, a second person). No work in wind, rain, frost or alone
+        severity: critical
+        why: Falls from roofs are among the deadliest DIY accidents.
+      - check: Structural condition judged by a roofer or engineer where timber is soft, sagging or cut
+        severity: critical
+    blocks: [roof-repair, attic-conversion, facade-preparation]
+
+  roof-repair:
+    name: {en: Roof repair and weather-tightness, sl: Popravilo strehe in vodotesnost}
+    trade: roof
+    requires:
+      - check: Cause of each leak found (broken tile, flashing, chimney, valley, gutter, roof window, condensation)
+        severity: critical
+      - check: Work only within DIY limits (a few tiles, ridge, small flashing, gutters). Re-roofing, structural timber and chimneys go to professionals
+        severity: critical
+      - check: Fall protection in place for the working height
+        severity: critical
+    blocks: [insulation, facade-preparation, attic-conversion]
+    warnings:
+      - Make the roof rain-tight before you open any interior ceiling or start interior finishing.
+
+  attic-conversion:
+    name: {en: Attic conversion to living space, sl: Preureditev podstrešja v bivalni prostor}
+    trade: roof
+    requires:
+      - check: Permit and rules for living space (headroom, escape, daylight, fire, energy) answered
+        severity: critical
+      - check: Floor structure and rafters checked by an engineer for the new loads, openings and stair
+        severity: critical
+      - check: Roof is rain-tight and ventilated as designed (cold roof air gap, or a vapour-open warm roof build-up)
+        severity: critical
+      - check: Insulation and vapour-control concept written down (rafter depth, extra layer, airtight tape at every joint)
+        severity: critical
+        why: A wrong build-up condenses inside the roof and rots it, usually unseen for years.
+      - check: Fixed stair and escape route planned
+        severity: critical
+      - check: Summer overheating addressed (external shading, insulation type, ventilation)
+        severity: important
+    blocks: [partitions-and-ceilings, wall-finish, windows-install]
+
+  facade-preparation:
+    name: {en: Facade survey, scaffold and substrate, sl: Pregled fasade, oder in podlaga}
+    trade: facade
+    requires:
+      - check: Permit, neighbour and co-owner questions answered (boundary, apartment blocks, heritage areas)
+        severity: critical
+      - check: Substrate tested (hollow render, cracks, pull-off or tap test, damp, algae, old paint, asbestos panels)
+        severity: critical
+      - check: Roof, gutters and windows work planned first, so the facade is not opened twice
+        severity: critical
+      - check: Scaffold with edge protection ordered, with the access, ties and permits it needs
+        severity: critical
+      - check: Plinth, ground levels and drainage solved (insulation and render must stay clear of splashing water and soil)
+        severity: important
+    blocks: [facade-etics, facade-render]
+
+  facade-etics:
+    name: {en: Facade insulation system (ETICS), sl: Fasadna toplotna izolacija}
+    trade: facade
+    requires:
+      - check: One tested system from one maker, with the system's fire requirements for the building height met
+        severity: critical
+      - check: Window position and sill, reveal and blind box details planned (the frame lies in or near the insulation plane)
+        severity: critical
+      - check: Dry weather window with +5 to +25 °C and no rain or frost for the curing of each layer
+        severity: critical
+      - check: Service penetrations (lights, meters, downpipes, cables) planned with the right fixings and sealing
+        severity: important
+    blocks: [facade-render]
+    wait_after: Adhesive sets per the data sheet (typically about 1–2 days) before dowelling and sanding
+
+  facade-render:
+    name: {en: Base coat, mesh and finish render, sl: Armirni sloj in zaključni omet}
+    trade: facade
+    requires:
+      - check: Boards glued, dowelled and sanded flat, all gaps filled
+        severity: important
+      - check: Reinforcing mesh with diagonal strips at window corners and sealing at every edge and penetration
+        severity: critical
+      - check: Base coat cured per the data sheet before primer and finish render (typically about 1 day per mm, at least several days)
+        severity: critical
+      - check: Weather protection on the scaffold (sheeting) for sun, wind and rain
+        severity: important
+    warnings:
+      - A render with cracks lets water in behind the insulation. Mesh and detailing at every corner and edge are the whole job.
+
+  garden-structure-plan:
+    name: {en: Garden structure planning (shed, pergola, carport, fence, retaining wall), sl: Načrtovanje vrtnih zgradb}
+    trade: garden
+    requires:
+      - check: Permit or notification rules checked (size, height, roof, distance to the boundary, use) and neighbour consent where needed
+        severity: critical
+      - check: Underground utilities located and no building over pipes, cables or the septic system
+        severity: critical
+      - check: Wind and snow loads, soil and frost depth known for the plot
+        severity: important
+      - check: Retaining walls over about 0.5–1 m and anything people can fall from checked by an engineer
+        severity: critical
+    blocks: [garden-foundation]
+
+  garden-foundation:
+    name: {en: Foundation and base for garden structures, sl: Temelji za vrtne zgradbe}
+    trade: garden
+    requires:
+      - check: Foundation type matches load and ground (point footings below frost, strip, slab, screw piles)
+        severity: critical
+      - check: Level, square and diagonals checked, with falls and drainage around
+        severity: critical
+      - check: Timber stays off the ground (post shoes, damp-proof layer) and anchored against wind uplift
+        severity: critical
+    blocks: [garden-structure-build]
+    wait_after: Concrete cures at least 7 days before loading (full strength about 28 days)
+
+  garden-structure-build:
+    name: {en: Garden structure construction, sl: Gradnja vrtnih zgradb}
+    trade: garden
+    requires:
+      - check: Timber use class suits the exposure (ground contact needs the highest class or a barrier)
+        severity: important
+      - check: Bracing, roof falls, roofing and gutters planned
+        severity: important
+      - check: Outdoor electrics only by a licensed electrician, with RCD and outdoor-rated fittings
+        severity: critical
+      - check: Fire distances respected if there is a stove, grill or fire pit
+        severity: critical
+
+  pool-plan:
+    name: {en: Pool planning and permits, sl: Načrtovanje bazena in dovoljenja}
+    trade: pool
+    requires:
+      - check: Permit and safety-barrier rules answered (volume, depth, distance to the boundary, fence or cover for children)
+        severity: critical
+      - check: Ground, groundwater and slope surveyed (flotation risk when emptied, bearing capacity, drainage)
+        severity: critical
+      - check: Structure type and builder chosen (concrete shell, prefab shell, liner pool) with an engineer for any concrete or retaining structure
+        severity: critical
+      - check: Technical room, power supply, water supply, drain and discharge of backwash and emptied water planned
+        severity: critical
+      - check: Excavator and crane access, spoil disposal and underground utilities checked
+        severity: important
+      - check: Running cost and maintenance understood (energy, chemicals, cover, winter)
+        severity: tip
+    blocks: [pool-structure, pool-technical]
+
+  pool-structure:
+    name: {en: Pool excavation and shell, sl: Izkop in konstrukcija bazena}
+    trade: pool
+    requires:
+      - check: Excavation and base made to the structure maker's or engineer's drawings, with groundwater control
+        severity: critical
+      - check: Shell, steps and penetrations (skimmers, returns, drains, lights) fixed at the planned positions
+        severity: critical
+      - check: Backfill, edge and surround drainage planned so water leaves and the shell is not pushed or floated
+        severity: critical
+    blocks: [pool-technical, outdoor-substrate]
+    wait_after: Concrete and screeds cure per the structure's data sheet before filling
+
+  pool-technical:
+    name: {en: Pool filtration, electrics, chemistry and safety, sl: Filtracija, elektrika, kemija in varnost bazena}
+    trade: pool
+    requires:
+      - check: Pump, filter, skimmers and returns sized for the volume and the turnover time
+        severity: critical
+      - check: Electrical installation by a licensed electrician to the pool rules (zones, RCD 30 mA, bonding, low-voltage lights)
+        severity: critical
+      - check: Chemicals stored apart, ventilated and out of children's reach, with test kit and handling rules
+        severity: critical
+      - check: Safety barrier, cover, alarm or fence with a self-closing gate in place before filling
+        severity: critical
+      - check: Winterising plan (water level, drained pipes, plugs, cover)
+        severity: important
+
+  indoor-stairs-inspection:
+    name: {en: Indoor stairs inspection, sl: Pregled notranjih stopnic}
+    trade: stairs-indoor
+    requires:
+      - check: Every riser and tread measured and compared (rise, going, differences between steps, headroom, width, landings)
+        severity: critical
+      - check: Structure checked for movement, creaks, rot, woodworm and fixings (stringers, posts, wall and floor connections)
+        severity: critical
+      - check: Handrail and guard tested with a firm push, and gap sizes measured
+        severity: critical
+      - check: Lighting, switches at both ends, slip risk and impact sound noted
+        severity: important
+      - check: Planned floor build-up changes on the floors above and below added to the stair calculation
+        severity: critical
+        ref: finished_floor_level
+        why: A new floor covering changes the first and last riser. Every step must stay equal.
+    blocks: [indoor-stairs-work]
+
+  indoor-stairs-work:
+    name: {en: Indoor stairs repair, refinish or replacement, sl: Popravilo, obnova ali zamenjava notranjih stopnic}
+    trade: stairs-indoor
+    requires:
+      - check: Repair, refinish or replace decided from the inspection, with the total rise and the finished floor levels fixed
+        severity: critical
+      - check: New openings or changed floor structure checked by an engineer and permitted
+        severity: critical
+      - check: Floor coverings of both floors finished or their thickness known, so the first and last riser are right
+        severity: critical
+        ref: finished_floor_level
+      - check: Handrail and guard anchors set into solid structure
+        severity: critical
+    blocks: [painting, skirting-and-trim]
+
+  # ===========================================================================
+  # CHIMNEY AND STOVE, GARDEN, IRRIGATION, OUTDOOR POOL, SMART HOME
+  # ===========================================================================
+
+  chimney-assessment:
+    name: {en: Chimney and flue assessment, sl: Pregled dimnika in dimovoda}
+    trade: chimney
+    requires:
+      - check: Chimney type, liner, age and connected appliance identified (stove, boiler, open fire, masonry with liner, stainless liner, prefab twin-wall, room-sealed flue)
+        severity: critical
+      - check: Inspection and sweep by a licensed chimney sweep with a written report (cracks, soot, tightness, draught, clearances, cap)
+        severity: critical
+        why: A cracked or blocked flue leaks carbon monoxide and starts chimney fires. Do not fire it before it is checked.
+      - check: Carbon monoxide detector and smoke detector working in the room with the appliance and on the escape route
+        severity: critical
+      - check: Brown stains or damp on the chimney walls and ceilings checked (a leaking or condensing flue)
+        severity: important
+    blocks: [chimney-work]
+
+  chimney-work:
+    name: {en: Chimney lining, stove or boiler connection, sl: Obloga dimnika in priklop peči ali kotla}
+    trade: chimney
+    requires:
+      - check: Appliance, flue diameter and height matched with the maker's data and a licensed chimney sweep or installer (draught, clearances, approvals)
+        severity: critical
+      - check: Flue liner sized and insulated for the appliance, and a condensing boiler has a flue made for condensate
+        severity: critical
+      - check: Combustion air supply planned (external air connection) and conflicts with kitchen extractors and ventilation solved
+        severity: critical
+        why: Negative pressure in an airtight home can pull flue gases back into the room.
+      - check: Hearth and clearances to combustibles as the maker says, with fire stops at floor and roof penetrations
+        severity: critical
+      - check: First fire, commissioning and sign-off by the chimney sweep or installer before regular use
+        severity: critical
+    warnings:
+      - Burn only dry wood (under about 20% moisture). Wet wood makes tar and chimney fires.
+
+  garden-design-plan:
+    name: {en: Garden survey and design, sl: Pregled in zasnova vrta}
+    trade: landscaping
+    requires:
+      - check: Site surveyed (levels, falls, sun hours, wind, soil type, a drainage test, trees and roots, boundaries)
+        severity: important
+      - check: Underground utilities, septic system and soakaways located
+        severity: critical
+      - check: Permit questions answered for tree felling (protected trees), fences, retaining walls, ponds and structures
+        severity: critical
+      - check: Zones and uses decided, with a budget and a phased plan (hard landscaping first, planting last)
+        severity: important
+      - check: Heavy deliveries, skips and machinery routes planned so finished areas are not damaged
+        severity: tip
+    blocks: [garden-groundwork, irrigation-plan]
+
+  garden-groundwork:
+    name: {en: Garden groundwork (levels, soil, drainage), sl: Zemeljska dela v vrtu}
+    trade: landscaping
+    requires:
+      - check: Topsoil stripped and stored separately, subsoil loosened where machines compacted it
+        severity: important
+      - check: Falls away from buildings and drainage solved (see site drainage)
+        severity: critical
+      - check: Empty sleeves for irrigation, power, lighting and data laid under future paving and drives before they are surfaced
+        severity: critical
+        why: Digging up a finished terrace for one cable costs far more than a plastic pipe now.
+      - check: Hard surfaces, walls and fences finished before the soil is spread and planted
+        severity: important
+    blocks: [garden-planting, irrigation-install]
+
+  garden-planting:
+    name: {en: Lawn, beds, trees and hedges, sl: Trata, grede, drevesa in žive meje}
+    trade: landscaping
+    requires:
+      - check: Soil prepared (topsoil depth, loosened, pH and organic matter considered, no builders' rubble)
+        severity: important
+      - check: Plants matched to sun, soil, wind and climate, with distances to buildings, boundaries and pipes respected
+        severity: important
+      - check: Irrigation installed and tested, or a watering plan for the first two years
+        severity: important
+      - check: Planting season chosen (autumn or spring for most trees and shrubs, late summer or spring for lawns)
+        severity: tip
+
+  irrigation-plan:
+    name: {en: Irrigation planning, sl: Načrtovanje namakanja}
+    trade: irrigation
+    requires:
+      - check: Water source and rights clear (mains with backflow prevention, a well or borehole with its permit, a rainwater tank)
+        severity: critical
+      - check: Flow (litres per minute) and pressure measured at the tap or pump
+        severity: critical
+        why: The available flow decides how many sprinklers can run at once. Guessing means zones that do not work.
+      - check: Zones planned by plant type (lawn rotors or sprays, beds drip), with a weather or rain sensor and a controller
+        severity: important
+      - check: Local water restrictions, meter and sewer-charge rules checked
+        severity: tip
+      - check: Winterising planned (drain points and a way to blow out the lines)
+        severity: important
+    blocks: [irrigation-install]
+
+  irrigation-install:
+    name: {en: Irrigation installation, sl: Montaža namakalnega sistema}
+    trade: irrigation
+    requires:
+      - check: Sleeves laid under paving and drives before they were surfaced
+        severity: critical
+      - check: Backflow preventer, filter and pressure regulator fitted at the connection
+        severity: critical
+        why: Garden water can flow backwards into the drinking water supply. A backflow preventer is required in many countries.
+      - check: Pipes laid below the cultivation depth with drain points at the low spots, valve boxes accessible, buried pipes drawn on a plan
+        severity: important
+      - check: Controller power from an outdoor-rated, RCD-protected supply, and any mains connection made by a licensed electrician
+        severity: critical
+      - check: Lines flushed before heads are fitted, then each zone tested and adjusted
+        severity: important
+    warnings:
+      - Mark the pipe and valve positions on a drawing and with photos before you backfill.
+
+  pool-heating-and-cover:
+    name: {en: Outdoor pool heating and cover, sl: Ogrevanje in prekrivalo zunanjega bazena}
+    trade: pool
+    requires:
+      - check: Heat loss and the heat-up time estimated for the volume, climate and cover
+        severity: important
+      - check: Heat source sized from the maker's tables, with its electrical load checked against the panel
+        severity: critical
+      - check: Cover type chosen (safety cover, solar or thermal cover, roller) and who can operate it
+        severity: important
+      - check: Noise and placement of the heat pump checked against neighbours and bedrooms
+        severity: tip
+    blocks: [pool-season-care]
+
+  pool-season-care:
+    name: {en: Pool opening, closing and winter care, sl: Odpiranje, zapiranje in zimska zaščita bazena}
+    trade: pool
+    requires:
+      - check: Water chemistry log kept (pH, chlorine or other sanitiser, alkalinity, stabiliser) and the test kit in date
+        severity: important
+      - check: Closing routine written down (water level, drained pipes, winter plugs, ice compensator, cover, chemicals)
+        severity: critical
+      - check: Pool never emptied in high groundwater or in frost
+        severity: critical
+      - check: Safety cover, fence, gate and alarm re-tested at the start of every season
+        severity: critical
+
+  smart-home-plan:
+    name: {en: Smart home plan and standards, sl: Načrt pametnega doma in standardi}
+    trade: smart-home
+    requires:
+      - check: Goals ranked (comfort, energy, security, accessibility, convenience) and what must keep working without the internet or an app
+        severity: important
+      - check: System standard chosen (wired bus such as KNX, wireless such as Zigbee or Z-Wave, Matter and Thread, or Wi-Fi), with local control, privacy and long-term support weighed
+        severity: important
+      - check: Structured network cabling planned to every room and to the ceiling access points, with a switch cabinet and a place for backup power
+        severity: important
+      - check: Neutral wire at every switch box, spare conduits, and power at every blind and sensor position
+        severity: critical
+        why: Many smart switches and sensors cannot be fitted without a neutral. Fixing it after plaster is expensive.
+      - check: Who may do what decided (low-voltage and network by you, mains-voltage devices and the panel by a licensed electrician)
+        severity: critical
+    blocks: [smart-home-cabling, panel-and-main-services]
+
+  smart-home-cabling:
+    name: {en: Smart home cabling and rough-in, sl: Kabliranje pametnega doma}
+    trade: smart-home
+    requires:
+      - check: Network, bus and sensor cables pulled in the rough-in, kept apart from mains cables, labelled at both ends and photographed
+        severity: important
+      - check: Conduits to blinds, outdoor lights, cameras, the gate, the garden and the garage laid before walls and paving are closed
+        severity: important
+      - check: Cable types and lengths follow the standard (for example Cat 6 or Cat 6a up to 90 m of fixed cable)
+        severity: important
+    blocks: [wall-plaster-repair, partitions-and-ceilings]
+
+  smart-home-commission:
+    name: {en: Smart home commissioning and security, sl: Zagon in varnost pametnega doma}
+    trade: smart-home
+    requires:
+      - check: Mains-voltage devices installed and tested by the licensed electrician
+        severity: critical
+      - check: Network secured (default passwords changed, automatic updates, separate guest and device networks, strong unique passwords, two-factor login)
+        severity: critical
+      - check: Safety functions (smoke and CO alarms, door locks, heating limits) work without the cloud, the app or the internet
+        severity: critical
+      - check: Backups of the configuration and a written overview for the household, with a manual fallback at every switch
+        severity: important
+      - check: Privacy checked for cameras, voice assistants and data sent to the cloud
+        severity: important
+
+  # ===========================================================================
+  # FINE-GRAINED TASKS (water heating, shower glass)
+  # ===========================================================================
+
+  water-heating-plan:
+    name: {en: Hot water system plan, sl: Načrt priprave tople vode}
+    trade: water-heating
+    requires:
+      - check: Hot-water points listed with their distances from the source, and the demand estimated (people, showers, bath, kitchen, washing machine)
+        severity: important
+      - check: System chosen (central cylinder, heat-pump water heater, electric storage, instantaneous electric, gas) with the heat source and the panel capacity checked
+        severity: critical
+        why: An instantaneous shower heater can need 18–27 kW and a three-phase supply.
+      - check: Location chosen (frost-free, accessible, floor load for a full tank, drain or drip tray)
+        severity: important
+      - check: Circulation or short pipes planned for far points, and the legionella and scald-protection rules understood
+        severity: critical
+    blocks: [water-heating-install, plumbing-rough-in]
+
+  water-heating-install:
+    name: {en: Hot water appliance installation, sl: Montaža naprave za toplo vodo}
+    trade: water-heating
+    requires:
+      - check: Supply lines tested and insulated, isolation valves and a drain in place
+        severity: critical
+      - check: Safety group (safety valve, non-return valve, expansion vessel for closed tanks) fitted with a visible discharge pipe to a drain, and never blocked
+        severity: critical
+      - check: Thermostatic mixing valve set to 43 °C or less at showers and baths, store at 60 °C or more
+        severity: critical
+      - check: Electrical connection, gas and flue by licensed professionals where required
+        severity: critical
+    blocks: [sanitary-fit-out]
+
+  shower-glass-install:
+    name: {en: Shower glass installation, sl: Montaža stekla za tuš}
+    trade: sanitary
+    requires:
+      - check: Tiles and grout finished and the glass measured on the finished walls (not from drawings)
+        severity: critical
+        why: Glass is made to measure and cannot be returned.
+      - check: Backing or sealed anchors for the profile or clamps were planned and photographed before tiling
+        severity: critical
+      - check: Drain, falls and threshold checked so the door clears the tiles and the water runs to the drain
+        severity: important
+      - check: Two or three people with suction lifters and a safe place to store the glass
+        severity: important
+    blocks: [silicone-joints]

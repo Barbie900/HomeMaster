@@ -1,0 +1,10 @@
+{
+  "name": "homemaster",
+  "version": "0.1.0",
+  "description": "DIY home renovation planner for Claude Code: connected trade knowledge, dependency checks, step-by-step work instructions, tool and material lists. Answers in your language (EN/SL built in).",
+  "author": {
+    "name": "HomeMaster contributors"
+  },
+  "license": "MIT",
+  "keywords": ["diy", "renovation", "home-improvement", "bathroom", "tiling", "planning", "prenova"]
+}
