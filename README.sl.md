@@ -32,7 +32,7 @@ Navodila za cel prostor bi bila predolga. HomeMaster razdeli vsak prostor na **d
 V Claude Code:
 
 ```
-/plugin marketplace add <github-uporabnik>/HomeMaster
+/plugin marketplace add Barbie900/HomeMaster
 /plugin install homemaster@homemaster
 ```
 

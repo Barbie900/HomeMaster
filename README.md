@@ -32,7 +32,7 @@ Instructions for a whole room would be far too long. HomeMaster splits every roo
 In Claude Code:
 
 ```
-/plugin marketplace add <github-user>/HomeMaster
+/plugin marketplace add Barbie900/HomeMaster
 /plugin install homemaster@homemaster
 ```
 
