@@ -12,10 +12,16 @@ Goal: create `my-home/` in the **current working directory** with an accurate pi
 - If `my-home/` already exists, don't overwrite it. Offer to update specific parts.
 
 ## 1. Interview
-Ask in **small batches (3–5 questions)**, conversationally, in the user's language. Detect the language from their first message, and confirm it as question 1. Accept "don't know". Record it as unknown and say who could find out. Explain briefly *why* you ask when it's not obvious.
+**Language rule (do this first).**
+1. **Start in English**, whatever the user typed. Your first message is short and ends with **question 1: which language should I use for everything** (questions, files, plans, instructions)? Ask only that question first.
+2. **As soon as the user names a language** (or writes in one and confirms it), **switch everything to that language**: the rest of the interview, the summary, the file contents, the plan and all later answers. Don't mix languages. Don't switch back to English unless asked.
+3. **Record it** in `my-home/profile.md` (`Language:`). Later skills and agents answer in that language.
+4. **If there is no glossary for that language** (`references/glossary-<lang>.md` in the knowledge skill; only Slovenian ships today), tell the user once, in their language, that trade terms are translated from general knowledge and may be less precise. Ask them to check terms with a local supplier, and suggest adding a glossary (see `docs/CONTRIBUTING.md`). **Never invent regulations** for a country without a region file; say so and keep to general guidance.
+
+Ask in **small batches (3–5 questions)**, conversationally. Accept "don't know". Record it as unknown and say who could find out. Explain briefly *why* you ask when it's not obvious.
 
 **Batch A: basics**
-1. Language for all answers (e.g. Slovenian / English)
+1. Language for all answers (already asked and switched, see the language rule). Confirm it in one line in that language, then continue.
 2. Country (drives regulations: see the knowledge skill's `regions/`)
 3. Property type: house / flat in an apartment block / cottage / other
 4. Year built and any earlier renovations (age → asbestos risk, old wiring, old pipes)
